@@ -1,0 +1,33 @@
+version: '3.9'
+services:
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./api-gateway/.env
+    depends_on:
+      - users-service
+      - projects-service
+      - categories-service
+      - analytics-service
+
+  users-service:
+    build: ./services/users-service
+    ports:
+      - "3001:3001"
+
+  projects-service:
+    build: ./services/projects-service
+    ports:
+      - "3002:3002"
+
+  categories-service:
+    build: ./services/categories-service
+    ports:
+      - "3003:3003"
+
+  analytics-service:
+    build: ./services/analytics-service
+    ports:
+      - "3004:3004"

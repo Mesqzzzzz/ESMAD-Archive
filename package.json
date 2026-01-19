@@ -1,0 +1,15 @@
+{
+  "name": "esmad-academic-repository",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:gateway\" \"npm run dev:users\" \"npm run dev:projects\" \"npm run dev:categories\" \"npm run dev:analytics\"",
+    "dev:gateway": "cd api-gateway && npm run dev",
+    "dev:users": "cd services/users-service && npm run dev",
+    "dev:projects": "cd services/projects-service && npm run dev",
+    "dev:categories": "cd services/categories-service && npm run dev",
+    "dev:analytics": ""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

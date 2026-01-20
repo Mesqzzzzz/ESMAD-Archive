@@ -17,7 +17,9 @@ router.all("/:service/*", async (req, res) => {
     return res.status(404).json({ error: "Service not found" });
 
   try {
-    const url = `${SERVICES[service]}/${path}`;
+    const url = path
+      ? `${SERVICES[service]}/${service}/${path}`
+      : `${SERVICES[service]}/${service}`;
     const method = req.method.toLowerCase();
     const data = req.body;
 

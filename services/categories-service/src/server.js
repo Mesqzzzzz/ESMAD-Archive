@@ -2,6 +2,8 @@ require("dotenv").config();
 const app = require("./app");
 
 const PORT = process.env.PORT || 3003;
-app.listen(PORT, () => {
-  console.log(`Categories service running on port ${PORT}`);
+const HOST = process.env.HOST || "0.0.0.0";
+
+app.listen(PORT, HOST, () => {
+  console.log(`Categories service running on http://${HOST}:${PORT}`);
 });

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ESMAD Academic Repository</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // Configura as cores personalizadas
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#F05A31",
+              secondary: "#BBBCC1",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body class="bg-white font-sans text-gray-800">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md">
+      <div
+        class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center"
+      >
+        <div class="text-2xl font-bold text-primary">ESMAD Repository</div>
+        <div>
+          <a href="login.html"
+            ><button
+              id="loginBtn"
+              class="bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 transition"
+            >
+              Login
+            </button></a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="max-w-7xl mx-auto px-4 py-20 text-center">
+      <h1 class="text-4xl md:text-5xl font-extrabold text-primary mb-6">
+        Conecta-te com os melhores projetos académicos
+      </h1>
+      <p class="text-lg md:text-xl text-gray-600 mb-8">
+        Explora cursos, unidades curriculares e projetos desenvolvidos pelos
+        estudantes da ESMAD.
+      </p>
+      <a href="projects.html"
+        ><button
+          id="startBtn"
+          class="bg-primary text-white px-6 py-3 rounded-lg text-lg hover:opacity-90 transition"
+        >
+          Explorar Projetos
+        </button></a
+      >
+    </section>
+
+    <!-- Features / Tipos de Curso -->
+    <section class="max-w-7xl mx-auto px-4 py-16">
+      <h2 class="text-3xl font-bold text-white mb-8 text-center">
+        Tipos de Curso
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div
+          class="bg-primary text-white p-6 rounded-lg shadow-md hover:shadow-xl transition cursor-pointer text-center"
+        >
+          <h3 class="text-xl font-semibold mb-2">CTESP</h3>
+          <p class="text-white">
+            Cursos técnicos de especialização profissional
+          </p>
+        </div>
+        <div
+          class="bg-primary text-white p-6 rounded-lg shadow-md hover:shadow-xl transition cursor-pointer text-center"
+        >
+          <h3 class="text-xl font-semibold mb-2">Licenciatura</h3>
+          <p class="text-white">
+            Cursos de graduação com duração típica de 3 anos
+          </p>
+        </div>
+        <div
+          class="bg-primary text-white p-6 rounded-lg shadow-md hover:shadow-xl transition cursor-pointer text-center"
+        >
+          <h3 class="text-xl font-semibold mb-2">Mestrado</h3>
+          <p class="text-white">Cursos avançados de 2 anos após licenciatura</p>
+        </div>
+        <div
+          class="bg-primary text-white p-6 rounded-lg shadow-md hover:shadow-xl transition cursor-pointer text-center"
+        >
+          <h3 class="text-xl font-semibold mb-2">Pós-Graduação</h3>
+          <p class="text-white">
+            Cursos especializados e certificados de curta duração
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white shadow-inner mt-20">
+      <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-500">
+        &copy; 2026 ESMAD Academic Repository. Todos os direitos reservados.
+      </div>
+    </footer>
+
+    <!-- Script -->
+    <script>
+      const loginBtn = document.getElementById("loginBtn");
+      const startBtn = document.getElementById("startBtn");
+    </script>
+  </body>
+</html>

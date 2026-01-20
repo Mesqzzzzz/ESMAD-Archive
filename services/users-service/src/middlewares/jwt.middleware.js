@@ -1,15 +1,21 @@
-import jwt from "jsonwebtoken";
+// middleware/auth.js
+const jwt = require("jsonwebtoken");
 
-export const verifyToken = (req, res, next) => {
-  const header = req.headers.authorization;
-  if (!header) return res.status(401).json({ error: "No token provided" });
+module.exports = (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-  const token = header.split(" ")[1];
+  if (!authHeader) return res.status(401).json({ error: "Token em falta" });
+
+  const token = authHeader.split(" ")[1];
 
   try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "supersecretkey",
+    );
+    req.user = decoded;
     next();
   } catch {
-    res.status(401).json({ error: "Invalid token" });
+    res.status(401).json({ error: "Token inválido" });
   }
 };

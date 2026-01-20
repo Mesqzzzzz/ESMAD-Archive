@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ESMAD Academic Repository - Projetos</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // Cores personalizadas
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#F05A31",
+              secondary: "#BBBCC1",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body class="bg-white font-sans text-gray-800">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md">
+      <div
+        class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center"
+      >
+        <div class="text-2xl font-bold text-primary">ESMAD Repository</div>
+        <div>
+          <button
+            id="logoutBtn"
+            onclick="logout()"
+            class="bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 transition"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    </nav>
+    <p id="userInfo" class="text-sm text-gray-600"></p>
+
+    <!-- Barra de pesquisa -->
+    <section class="max-w-7xl mx-auto px-4 py-6">
+      <input
+        type="text"
+        id="searchInput"
+        class="w-full md:w-1/2 border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        placeholder="Pesquisar cursos ou projetos..."
+      />
+    </section>
+
+    <!-- Tipos de curso -->
+    <section class="max-w-7xl mx-auto px-4 py-6">
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">Tipos de Curso</h2>
+      <div class="flex flex-wrap gap-4 mb-6">
+        <button
+          class="course-btn bg-secondary px-4 py-2 rounded-lg text-gray-900 hover:bg-gray-300 transition"
+          data-course="CTESP"
+        >
+          CTESP
+        </button>
+        <button
+          class="course-btn bg-secondary px-4 py-2 rounded-lg text-gray-900 hover:bg-gray-300 transition"
+          data-course="Licenciatura"
+        >
+          Licenciatura
+        </button>
+        <button
+          class="course-btn bg-secondary px-4 py-2 rounded-lg text-gray-900 hover:bg-gray-300 transition"
+          data-course="Mestrado"
+        >
+          Mestrado
+        </button>
+        <button
+          class="course-btn bg-secondary px-4 py-2 rounded-lg text-gray-900 hover:bg-gray-300 transition"
+          data-course="Pos-Graduação"
+        >
+          Pós-Graduação
+        </button>
+      </div>
+
+      <!-- Filtros de ano e UC -->
+      <div id="filters" class="flex flex-wrap gap-4 mb-6 hidden">
+        <select
+          id="yearFilter"
+          class="border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">Todos os anos</option>
+          <option value="1">1º Ano</option>
+          <option value="2">2º Ano</option>
+          <option value="3">3º Ano</option>
+          <option value="4">4º Ano</option>
+        </select>
+
+        <select
+          id="ucFilter"
+          class="border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">Todas as UCs</option>
+          <option value="Matematica">Matemática</option>
+          <option value="Programacao">Programação</option>
+          <option value="Redes">Redes</option>
+          <option value="BasesDados">Bases de Dados</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Listagem de projetos -->
+    <section class="max-w-7xl mx-auto px-4 py-6">
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">Projetos</h2>
+      <div
+        id="projectsList"
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+      >
+        <!-- Projetos serão renderizados via JS -->
+      </div>
+    </section>
+
+    <script>
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        // Não está autenticado → volta para login
+        window.location.href = "login.html";
+      }
+
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user) {
+        document.getElementById("userInfo").textContent = `Olá, ${user.name}`;
+      }
+      function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+      }
+
+      // Dados de exemplo
+      const allProjects = [
+        {
+          id: 1,
+          name: "Projeto A",
+          course: "CTESP",
+          year: 1,
+          uc: "Matematica",
+        },
+        {
+          id: 2,
+          name: "Projeto B",
+          course: "Licenciatura",
+          year: 2,
+          uc: "Programacao",
+        },
+        { id: 3, name: "Projeto C", course: "Mestrado", year: 1, uc: "Redes" },
+        {
+          id: 4,
+          name: "Projeto D",
+          course: "Pos-Graduação",
+          year: 4,
+          uc: "BasesDados",
+        },
+        {
+          id: 5,
+          name: "Projeto E",
+          course: "Licenciatura",
+          year: 3,
+          uc: "Matematica",
+        },
+      ];
+
+      const projectsList = document.getElementById("projectsList");
+      const searchInput = document.getElementById("searchInput");
+      const courseBtns = document.querySelectorAll(".course-btn");
+      const filtersDiv = document.getElementById("filters");
+      const yearFilter = document.getElementById("yearFilter");
+      const ucFilter = document.getElementById("ucFilter");
+
+      let selectedCourse = "";
+      let searchTerm = "";
+
+      function renderProjects() {
+        projectsList.innerHTML = "";
+
+        let filtered = allProjects.filter((p) => {
+          return (
+            (!selectedCourse || p.course === selectedCourse) &&
+            (!yearFilter.value || p.year == yearFilter.value) &&
+            (!ucFilter.value || p.uc === ucFilter.value) &&
+            (!searchTerm ||
+              p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+          );
+        });
+
+        if (filtered.length === 0) {
+          projectsList.innerHTML = `<p class="text-gray-500 col-span-full">Nenhum projeto encontrado.</p>`;
+          return;
+        }
+
+        filtered.forEach((p) => {
+          const card = document.createElement("div");
+          card.className =
+            "bg-secondary p-4 rounded-lg shadow-md hover:shadow-xl transition";
+          card.innerHTML = `<h3 class="text-lg font-bold text-primary mb-2">${p.name}</h3>
+                                  <p>Curso: ${p.course}</p>
+                                  <p>Ano: ${p.year}</p>
+                                  <p>UC: ${p.uc}</p>`;
+          projectsList.appendChild(card);
+        });
+      }
+
+      // Eventos
+      courseBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          selectedCourse = btn.dataset.course;
+          filtersDiv.classList.remove("hidden");
+          renderProjects();
+        });
+      });
+
+      // card.addEventListener("click", () => {
+      //   const token = localStorage.getItem("token");
+
+      //   if (!token) {
+      //     alert("É necessário fazer login para abrir este projeto.");
+      //   } else {
+      //     // Aqui podes chamar a API com o token para obter detalhes
+      //     window.location.href = `/project.html?id=${p.id}`;
+      //   }
+      // });
+
+      searchInput.addEventListener("input", (e) => {
+        searchTerm = e.target.value;
+        renderProjects();
+      });
+
+      yearFilter.addEventListener("change", renderProjects);
+      ucFilter.addEventListener("change", renderProjects);
+
+      renderProjects();
+    </script>
+  </body>
+</html>

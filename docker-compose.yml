@@ -1,0 +1,99 @@
+services:
+  users-service:
+    build:
+      context: ./services/users-service
+    container_name: users-service
+    environment:
+      NODE_ENV: development
+      PORT: "3001"
+      HOST: "0.0.0.0"
+      JWT_SECRET: "supersecretkey"
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./services/users-service/users.db:/app/users.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  projects-service:
+    build:
+      context: ./services/projects-service
+    container_name: projects-service
+    environment:
+      NODE_ENV: development
+      PORT: "3002"
+      HOST: "0.0.0.0"
+    ports:
+      - "3002:3002"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  categories-service:
+    build:
+      context: ./services/categories-service
+    container_name: categories-service
+    environment:
+      NODE_ENV: development
+      PORT: "3003"
+      HOST: "0.0.0.0"
+    ports:
+      - "3003:3003"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3003/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  # analytics-service:
+  #   build:
+  #     context: ./services/analytics-service
+  #   container_name: analytics-service
+  #   environment:
+  #     PORT: "3004"
+  #     HOST: "0.0.0.0"
+  #   ports:
+  #     - "3004:3004"
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "wget", "-qO-", "http://localhost:3004/health"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 10
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./api-gateway/.env
+    restart: unless-stopped
+    # depends_on:
+    #   users-service:
+    #     condition: service_healthy
+    #   projects-service:
+    #     condition: service_healthy
+    #   categories-service:
+    #     condition: service_healthy
+    #   # analytics-service:
+    #   #   condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    # depends_on:
+    #   - api-gateway

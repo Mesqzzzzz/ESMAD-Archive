@@ -24,9 +24,11 @@ services:
       context: ./services/projects-service
     container_name: projects-service
     environment:
-      NODE_ENV: development
       PORT: "3002"
-      HOST: "0.0.0.0"
+      SQLITE_PATH: "/app/data/projects.db"
+      JWT_SECRET: "supersecretkey"
+    volumes:
+      - projects_data:/app/data
     ports:
       - "3002:3002"
     restart: unless-stopped
@@ -53,22 +55,6 @@ services:
       timeout: 3s
       retries: 10
 
-  # analytics-service:
-  #   build:
-  #     context: ./services/analytics-service
-  #   container_name: analytics-service
-  #   environment:
-  #     PORT: "3004"
-  #     HOST: "0.0.0.0"
-  #   ports:
-  #     - "3004:3004"
-  #   restart: unless-stopped
-  #   healthcheck:
-  #     test: ["CMD", "wget", "-qO-", "http://localhost:3004/health"]
-  #     interval: 10s
-  #     timeout: 3s
-  #     retries: 10
-
   api-gateway:
     build:
       context: ./api-gateway
@@ -78,15 +64,13 @@ services:
     env_file:
       - ./api-gateway/.env
     restart: unless-stopped
-    # depends_on:
-    #   users-service:
-    #     condition: service_healthy
-    #   projects-service:
-    #     condition: service_healthy
-    #   categories-service:
-    #     condition: service_healthy
-    #   # analytics-service:
-    #   #   condition: service_healthy
+    depends_on:
+      users-service:
+        condition: service_healthy
+      projects-service:
+        condition: service_healthy
+      categories-service:
+        condition: service_healthy
 
   frontend:
     build:
@@ -95,5 +79,8 @@ services:
     ports:
       - "8080:80"
     restart: unless-stopped
-    # depends_on:
-    #   - api-gateway
+    depends_on:
+      - api-gateway
+
+volumes:
+  projects_data:

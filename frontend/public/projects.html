@@ -7,7 +7,6 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      // Cores personalizadas
       tailwind.config = {
         theme: {
           extend: {
@@ -39,7 +38,11 @@
         </div>
       </div>
     </nav>
-    <p id="userInfo" class="text-sm text-gray-600"></p>
+
+    <p
+      id="userInfo"
+      class="max-w-7xl mx-auto px-4 pt-3 text-sm text-gray-600"
+    ></p>
 
     <!-- Barra de pesquisa -->
     <section class="max-w-7xl mx-auto px-4 py-6">
@@ -47,7 +50,7 @@
         type="text"
         id="searchInput"
         class="w-full md:w-1/2 border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        placeholder="Pesquisar cursos ou projetos..."
+        placeholder="Pesquisar projetos..."
       />
     </section>
 
@@ -99,145 +102,300 @@
           class="border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">Todas as UCs</option>
-          <option value="Matematica">Matemática</option>
-          <option value="Programacao">Programação</option>
-          <option value="Redes">Redes</option>
-          <option value="BasesDados">Bases de Dados</option>
+          <!-- opções carregadas via GraphQL -->
         </select>
       </div>
     </section>
 
     <!-- Listagem de projetos -->
     <section class="max-w-7xl mx-auto px-4 py-6">
-      <h2 class="text-2xl font-bold text-gray-900 mb-4">Projetos</h2>
+      <div class="flex items-center justify-between gap-4 flex-wrap mb-4">
+        <h2 class="text-2xl font-bold text-gray-900">Projetos</h2>
+        <p id="resultsInfo" class="text-sm text-gray-600"></p>
+      </div>
+
       <div
         id="projectsList"
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
-      >
-        <!-- Projetos serão renderizados via JS -->
-      </div>
+      ></div>
     </section>
 
     <script>
-      const token = localStorage.getItem("token");
+      // ===== CONFIG =====
+      const GRAPHQL_URL = "http://localhost:3002/graphql";
 
-      if (!token) {
-        // Não está autenticado → volta para login
-        window.location.href = "login.html";
-      }
+      // ===== AUTH UI (mantém como tens) =====
+      const token = localStorage.getItem("token");
+      if (!token) window.location.href = "login.html";
 
       const user = JSON.parse(localStorage.getItem("user"));
-      if (user) {
+      if (user)
         document.getElementById("userInfo").textContent = `Olá, ${user.name}`;
-      }
+
       function logout() {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         window.location.href = "login.html";
       }
 
-      // Dados de exemplo
-      const allProjects = [
-        {
-          id: 1,
-          name: "Projeto A",
-          course: "CTESP",
-          year: 1,
-          uc: "Matematica",
-        },
-        {
-          id: 2,
-          name: "Projeto B",
-          course: "Licenciatura",
-          year: 2,
-          uc: "Programacao",
-        },
-        { id: 3, name: "Projeto C", course: "Mestrado", year: 1, uc: "Redes" },
-        {
-          id: 4,
-          name: "Projeto D",
-          course: "Pos-Graduação",
-          year: 4,
-          uc: "BasesDados",
-        },
-        {
-          id: 5,
-          name: "Projeto E",
-          course: "Licenciatura",
-          year: 3,
-          uc: "Matematica",
-        },
-      ];
-
+      // ===== DOM =====
       const projectsList = document.getElementById("projectsList");
+      const resultsInfo = document.getElementById("resultsInfo");
       const searchInput = document.getElementById("searchInput");
       const courseBtns = document.querySelectorAll(".course-btn");
       const filtersDiv = document.getElementById("filters");
       const yearFilter = document.getElementById("yearFilter");
       const ucFilter = document.getElementById("ucFilter");
 
-      let selectedCourse = "";
+      // ===== STATE =====
+      let selectedCourseType = ""; // CTESP | Licenciatura | Mestrado | Pos-Graduação
+      let selectedCourseId = ""; // vamos buscar o curso “principal” desse tipo (por agora)
+      let selectedYear = "";
+      let selectedUcId = "";
       let searchTerm = "";
+      let latestCoursesCache = []; // cursos vindos do backend
 
-      function renderProjects() {
-        projectsList.innerHTML = "";
-
-        let filtered = allProjects.filter((p) => {
-          return (
-            (!selectedCourse || p.course === selectedCourse) &&
-            (!yearFilter.value || p.year == yearFilter.value) &&
-            (!ucFilter.value || p.uc === ucFilter.value) &&
-            (!searchTerm ||
-              p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-          );
+      // ===== HELPERS =====
+      async function gql(query, variables = {}) {
+        const res = await fetch(GRAPHQL_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // para futuro: se o projects-service ler JWT, já está aqui
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ query, variables }),
         });
 
-        if (filtered.length === 0) {
+        const json = await res.json();
+        if (json.errors?.length) {
+          console.error(json.errors);
+          throw new Error(json.errors[0].message || "Erro GraphQL");
+        }
+        return json.data;
+      }
+
+      function setLoading(message = "A carregar...") {
+        projectsList.innerHTML = `<p class="text-gray-500 col-span-full">${message}</p>`;
+      }
+
+      function renderProjects(items, total) {
+        projectsList.innerHTML = "";
+
+        resultsInfo.textContent =
+          typeof total === "number" ? `${total} resultado(s)` : "";
+
+        if (!items || items.length === 0) {
           projectsList.innerHTML = `<p class="text-gray-500 col-span-full">Nenhum projeto encontrado.</p>`;
           return;
         }
 
-        filtered.forEach((p) => {
+        items.forEach((p) => {
           const card = document.createElement("div");
           card.className =
-            "bg-secondary p-4 rounded-lg shadow-md hover:shadow-xl transition";
-          card.innerHTML = `<h3 class="text-lg font-bold text-primary mb-2">${p.name}</h3>
-                                  <p>Curso: ${p.course}</p>
-                                  <p>Ano: ${p.year}</p>
-                                  <p>UC: ${p.uc}</p>`;
+            "bg-secondary p-4 rounded-lg shadow-md hover:shadow-xl transition cursor-pointer";
+
+          const tags = (p.tags || [])
+            .slice(0, 6)
+            .map((t) => `#${t}`)
+            .join(" ");
+          card.innerHTML = `
+            <h3 class="text-lg font-bold text-primary mb-2">${escapeHtml(p.title)}</h3>
+            <p class="text-sm text-gray-700 line-clamp-3 min-h-[3.5rem]">${escapeHtml(p.description || "")}</p>
+            <div class="mt-3 text-xs text-gray-700">
+              <p><span class="font-semibold">ID:</span> ${p.id}</p>
+              <p><span class="font-semibold">Criado:</span> ${new Date(p.createdAt).toLocaleDateString("pt-PT")}</p>
+              ${tags ? `<p class="mt-2">${escapeHtml(tags)}</p>` : ""}
+            </div>
+          `;
+
+          // Para futuro (abrir detalhe):
+          // card.addEventListener("click", () => window.location.href = `project.html?id=${p.id}`);
           projectsList.appendChild(card);
         });
       }
 
-      // Eventos
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      // ===== DATA LOAD =====
+
+      // 1) Carregar cursos (para mapear type -> courseId)
+      async function loadCourses() {
+        // Se o teu backend ainda não tiver courses/ucs, isto vai falhar.
+        // Nesse caso, podes comentar esta função e ficar só com filtro por "tipo".
+        const data = await gql(`
+          query {
+            courses {
+              id
+              type
+              name
+            }
+          }
+        `);
+
+        latestCoursesCache = data.courses || [];
+      }
+
+      // Escolhe um courseId para um courseType.
+      // Se no futuro tiveres vários cursos por tipo, aqui trocamos para dropdown de "curso".
+      function pickCourseIdByType(type) {
+        const candidates = latestCoursesCache.filter((c) => c.type === type);
+        // estratégia simples: pega no primeiro
+        return candidates.length ? candidates[0].id : "";
+      }
+
+      // 2) Carregar UCs com base em (courseId + year)
+      async function loadUcsForFilters() {
+        // limpa dropdown
+        ucFilter.innerHTML = `<option value="">Todas as UCs</option>`;
+        selectedUcId = "";
+        ucFilter.value = "";
+
+        if (!selectedCourseId) return;
+
+        const variables = {
+          courseId: selectedCourseId,
+          year: selectedYear ? Number(selectedYear) : null,
+          search: null,
+        };
+
+        const data = await gql(
+          `
+          query($courseId: ID, $year: Int, $search: String) {
+            ucs(courseId: $courseId, year: $year, search: $search) {
+              id
+              name
+              year
+            }
+          }
+          `,
+          variables,
+        );
+
+        const ucs = data.ucs || [];
+        for (const u of ucs) {
+          const opt = document.createElement("option");
+          opt.value = u.id;
+          opt.textContent = `${u.name}${u.year ? ` (Ano ${u.year})` : ""}`;
+          ucFilter.appendChild(opt);
+        }
+      }
+
+      // 3) Carregar projetos com filtros (GraphQL)
+      async function loadProjects() {
+        setLoading("A carregar projetos...");
+
+        const filters = {
+          search: searchTerm || null,
+          courseId: selectedCourseId || null,
+          year: selectedYear ? Number(selectedYear) : null,
+          ucId: selectedUcId || null,
+          tag: null,
+        };
+
+        const data = await gql(
+          `
+          query($filters: ProjectFiltersInput, $page: PaginationInput) {
+            projects(filters: $filters, page: $page) {
+              total
+              items {
+                id
+                title
+                description
+                createdAt
+                tags
+                ucIds
+              }
+            }
+          }
+          `,
+          { filters, page: { limit: 50, offset: 0 } },
+        );
+
+        renderProjects(data.projects.items, data.projects.total);
+      }
+
+      // ===== EVENTS =====
+
+      // Tipo de curso
       courseBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          selectedCourse = btn.dataset.course;
+        btn.addEventListener("click", async () => {
+          selectedCourseType = btn.dataset.course;
+
+          // mostra filtros
           filtersDiv.classList.remove("hidden");
-          renderProjects();
+
+          // tenta mapear type -> courseId
+          selectedCourseId = pickCourseIdByType(selectedCourseType);
+
+          // refresca UCs e projetos
+          try {
+            await loadUcsForFilters();
+          } catch (e) {
+            console.warn(
+              "Não foi possível carregar UCs (talvez ainda não exista seed):",
+              e.message,
+            );
+          }
+
+          await loadProjects();
         });
       });
 
-      // card.addEventListener("click", () => {
-      //   const token = localStorage.getItem("token");
-
-      //   if (!token) {
-      //     alert("É necessário fazer login para abrir este projeto.");
-      //   } else {
-      //     // Aqui podes chamar a API com o token para obter detalhes
-      //     window.location.href = `/project.html?id=${p.id}`;
-      //   }
-      // });
-
+      // Pesquisa
+      let searchDebounce;
       searchInput.addEventListener("input", (e) => {
         searchTerm = e.target.value;
-        renderProjects();
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+          loadProjects().catch((err) => setLoading(`Erro: ${err.message}`));
+        }, 250);
       });
 
-      yearFilter.addEventListener("change", renderProjects);
-      ucFilter.addEventListener("change", renderProjects);
+      // Ano
+      yearFilter.addEventListener("change", async () => {
+        selectedYear = yearFilter.value;
 
-      renderProjects();
+        try {
+          await loadUcsForFilters();
+        } catch (e) {
+          console.warn("Não foi possível carregar UCs:", e.message);
+        }
+
+        await loadProjects();
+      });
+
+      // UC
+      ucFilter.addEventListener("change", async () => {
+        selectedUcId = ucFilter.value;
+        await loadProjects();
+      });
+
+      // ===== INIT =====
+      (async function init() {
+        try {
+          // cursos primeiro (para mapear tipos)
+          await loadCourses();
+        } catch (e) {
+          console.warn(
+            "Não foi possível carregar courses (talvez ainda não exista no backend):",
+            e.message,
+          );
+        }
+
+        // carrega projetos iniciais (sem filtros)
+        await loadProjects();
+      })().catch((err) => {
+        console.error(err);
+        setLoading(`Erro: ${err.message}`);
+      });
     </script>
   </body>
 </html>

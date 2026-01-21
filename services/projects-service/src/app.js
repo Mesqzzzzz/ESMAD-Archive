@@ -1,18 +1,29 @@
-const express = require("express");
-const cors = require("cors");
-const authRoutes = require("./routes/projects.routes");
+import express from "express";
+import cors from "cors";
+import jwt from "jsonwebtoken";
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+export function buildApp() {
+  const app = express();
+  app.use(cors());
+  app.use(express.json());
 
-app.get("/health", (req, res) => res.status(200).send("ok"));
+  // middleware opcional: extrai user do Authorization: Bearer <token>
+  app.use((req, _res, next) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
 
-// rota base
-app.use("/projects", authRoutes);
+    if (token) {
+      try {
+        const secret = process.env.JWT_SECRET || "supersecretkey";
+        req.user = jwt.verify(token, secret);
+      } catch {
+        req.user = null;
+      }
+    } else {
+      req.user = null;
+    }
+    next();
+  });
 
-app.get("/", (req, res) => {
-  res.send("Projects service is running");
-});
-
-module.exports = app;
+  return app;
+}

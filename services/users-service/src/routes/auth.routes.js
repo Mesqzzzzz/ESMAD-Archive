@@ -10,8 +10,9 @@ const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
 
-  if (!name || !email || !password)
+  if (!name || !email || !password) {
     return res.status(400).json({ error: "Todos os campos são obrigatórios" });
+  }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -27,14 +28,14 @@ router.post("/register", async (req, res) => {
           return res.status(500).json({ error: "Erro ao criar utilizador" });
         }
 
-        res.status(201).json({
+        return res.status(201).json({
           message: "Utilizador criado com sucesso",
           userId: this.lastID,
         });
       },
     );
-  } catch (err) {
-    res.status(500).json({ error: "Erro interno" });
+  } catch {
+    return res.status(500).json({ error: "Erro interno" });
   }
 });
 
@@ -42,12 +43,12 @@ router.post("/register", async (req, res) => {
 router.post("/login", (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password)
+  if (!email || !password) {
     return res.status(400).json({ error: "Email e password são obrigatórios" });
+  }
 
   db.get("SELECT * FROM users WHERE email = ?", [email], async (err, user) => {
     if (err) return res.status(500).json({ error: "Erro no servidor" });
-
     if (!user) return res.status(401).json({ error: "Credenciais inválidas" });
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -60,17 +61,10 @@ router.post("/login", (req, res) => {
       { expiresIn: "2h" },
     );
 
-    res.json({
+    return res.json({
       token,
       user: { id: user.id, name: user.name, email: user.email },
     });
-  });
-});
-// -------- Ver registos --------
-router.get("/all", (req, res) => {
-  db.all("SELECT id, name, email FROM users", [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
   });
 });
 

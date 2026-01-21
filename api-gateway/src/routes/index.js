@@ -4,9 +4,9 @@ const axios = require("axios");
 
 const SERVICES = {
   users: process.env.USERS_SERVICE_URL || "http://localhost:3001",
+  auth: process.env.USERS_SERVICE_URL || "http://localhost:3001",
   projects: process.env.PROJECTS_SERVICE_URL || "http://localhost:3002",
   categories: process.env.CATEGORIES_SERVICE_URL || "http://localhost:3003",
-  // analytics: "http://localhost:3004"  // futuramente
 };
 
 // Proxy genérico para GET, POST, PUT, DELETE

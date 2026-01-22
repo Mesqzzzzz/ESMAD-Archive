@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Upload de Projeto</title>
+    <style>
+      body {
+        font-family: system-ui, Arial;
+        background: #fff;
+        margin: 0;
+      }
+      header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .card {
+        border: 1px solid #eee;
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      label {
+        font-size: 13px;
+        color: #333;
+        display: block;
+        margin-bottom: 6px;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        font-size: 14px;
+      }
+      textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+      button {
+        padding: 10px 14px;
+        border: 0;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .primary {
+        background: #f05a31;
+        color: white;
+      }
+      .ghost {
+        background: #eee;
+        color: #111;
+      }
+      .hint {
+        color: #666;
+        font-size: 13px;
+        margin-top: 8px;
+      }
+      .status {
+        margin-top: 12px;
+        font-size: 13px;
+        color: #333;
+        white-space: pre-wrap;
+      }
+      .pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #bbbcc1;
+        color: #111;
+        font-size: 12px;
+      }
+      @media (max-width: 720px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div><strong>ESMAD Archive</strong> <span class="pill">Upload</span></div>
+      <a
+        class="ghost"
+        style="text-decoration: none; padding: 10px 14px; border-radius: 10px"
+        href="projects.html"
+        >← Voltar</a
+      >
+    </header>
+
+    <main>
+      <div class="card">
+        <h2 style="margin: 0 0 8px 0">Criar Projeto + Upload</h2>
+        <p class="hint" style="margin: 0 0 16px 0">
+          Fluxo: init → PUT para MinIO → complete → createProject.
+        </p>
+
+        <form id="uploadForm">
+          <div class="row">
+            <div>
+              <label for="title">Título *</label>
+              <input
+                id="title"
+                name="title"
+                placeholder="Ex: Sistema de Monitorização de Salas"
+                required
+              />
+            </div>
+
+            <div>
+              <label for="visibility">Visibilidade</label>
+              <select id="visibility" name="visibility" disabled>
+                <option value="PUBLIC" selected>Público (por agora)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top: 12px">
+            <label for="description">Descrição</label>
+            <textarea
+              id="description"
+              name="description"
+              placeholder="Resumo do projeto, stack, objetivos..."
+            ></textarea>
+          </div>
+
+          <div class="row" style="margin-top: 12px">
+            <div>
+              <label for="repoUrl">Repo URL</label>
+              <input
+                id="repoUrl"
+                name="repoUrl"
+                placeholder="https://github.com/..."
+              />
+            </div>
+            <div>
+              <label for="demoUrl">Demo URL</label>
+              <input id="demoUrl" name="demoUrl" placeholder="https://..." />
+            </div>
+          </div>
+
+          <div style="margin-top: 12px">
+            <label for="file">Ficheiro do projeto *</label>
+            <input
+              id="file"
+              name="file"
+              type="file"
+              accept=".pdf,.zip"
+              required
+            />
+            <div class="hint">
+              Tipos pretendidos: PDF ou ZIP. (Validação final é no backend.)
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="submitBtn" type="submit">
+              Criar & Upload
+            </button>
+            <button class="ghost" type="button" id="cancelBtn">Cancelar</button>
+          </div>
+
+          <div class="status" id="status"></div>
+        </form>
+      </div>
+    </main>
+
+    <script>
+      const API_BASE = "http://localhost:3000";
+      const GRAPHQL_URL = `${API_BASE}/graphql`;
+
+      function setStatus(msg) {
+        document.getElementById("status").textContent = msg || "";
+      }
+
+      function getToken() {
+        return localStorage.getItem("token");
+      }
+
+      function escapeTxt(s) {
+        return String(s || "");
+      }
+
+      document.getElementById("cancelBtn").addEventListener("click", () => {
+        window.location.href = "projects.html";
+      });
+
+      async function postJson(url, body, token) {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(body),
+        });
+
+        const text = await res.text().catch(() => "");
+        let json = null;
+        try {
+          json = text ? JSON.parse(text) : null;
+        } catch {}
+
+        if (!res.ok) {
+          const msg =
+            json?.detail || json?.error || text || `HTTP ${res.status}`;
+          throw new Error(msg);
+        }
+        return json;
+      }
+
+      async function gql(query, variables, token) {
+        const res = await fetch(GRAPHQL_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ query, variables }),
+        });
+        const json = await res.json();
+        if (json.errors?.length)
+          throw new Error(json.errors[0].message || "Erro GraphQL");
+        return json.data;
+      }
+
+      async function uploadToPresignedUrl(uploadUrl, file) {
+        // IMPORTANTE: o presigned URL foi assinado com ContentType,
+        // então temos de mandar o mesmo Content-Type no PUT.
+        const res = await fetch(uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": file.type || "application/octet-stream",
+          },
+          body: file,
+        });
+
+        if (!res.ok) {
+          const txt = await res.text().catch(() => "");
+          throw new Error(
+            `Falha no PUT para storage (${res.status}): ${txt || "sem detalhe"}`,
+          );
+        }
+      }
+
+      document
+        .getElementById("uploadForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          setStatus("");
+
+          const submitBtn = document.getElementById("submitBtn");
+          submitBtn.disabled = true;
+
+          const token = getToken();
+          if (!token) {
+            submitBtn.disabled = false;
+            setStatus("Precisas de login para criar projeto (e para upload).");
+            return;
+          }
+
+          const file = document.getElementById("file").files[0];
+          if (!file) {
+            submitBtn.disabled = false;
+            setStatus("Escolhe um ficheiro.");
+            return;
+          }
+
+          // inputs do projeto
+          const inputBase = {
+            title: document.getElementById("title").value.trim(),
+            description:
+              document.getElementById("description").value.trim() || null,
+            repoUrl: document.getElementById("repoUrl").value.trim() || null,
+            demoUrl: document.getElementById("demoUrl").value.trim() || null,
+            coverImageUrl: null,
+            ucIds: [],
+            tags: [],
+          };
+
+          if (!inputBase.title) {
+            submitBtn.disabled = false;
+            setStatus("Título é obrigatório.");
+            return;
+          }
+
+          try {
+            // 1) init
+            setStatus(
+              `1/4 A iniciar upload...\nFicheiro: ${escapeTxt(file.name)} (${file.size} bytes)`,
+            );
+            const init = await postJson(
+              `${API_BASE}/files/init`,
+              {
+                originalName: file.name,
+                contentType: file.type || "application/octet-stream",
+                sizeBytes: file.size,
+              },
+              token,
+            );
+
+            const fileId = init.fileId;
+            const uploadUrl = init.uploadUrl;
+            if (!fileId || !uploadUrl)
+              throw new Error("Resposta inválida do /files/init");
+
+            // 2) PUT para MinIO (presigned)
+            setStatus(`2/4 A enviar para storage (PUT)...\nfileId: ${fileId}`);
+            await uploadToPresignedUrl(uploadUrl, file);
+
+            // 3) complete
+            setStatus(`3/4 A finalizar upload...`);
+            await postJson(
+              `${API_BASE}/files/${encodeURIComponent(fileId)}/complete`,
+              {},
+              token,
+            );
+
+            // 4) createProject (GraphQL)
+            setStatus(`4/4 A criar projeto...`);
+            const data = await gql(
+              `
+            mutation ($input: CreateProjectInput!) {
+              createProject(input: $input) {
+                id
+                title
+                fileId
+              }
+            }
+            `,
+              { input: { ...inputBase, fileId } },
+              token,
+            );
+
+            const created = data?.createProject;
+            if (!created?.id)
+              throw new Error("Projeto criado sem ID (resposta inesperada).");
+
+            setStatus(
+              `✅ Sucesso!\nProjeto: ${created.title}\nID: ${created.id}`,
+            );
+            // vai para a página do projeto
+            window.location.href = `project.html?id=${encodeURIComponent(created.id)}`;
+          } catch (err) {
+            console.error(err);
+            setStatus(`❌ Erro: ${err.message || "Erro desconhecido"}`);
+            submitBtn.disabled = false;
+          }
+        });
+    </script>
+  </body>
+</html>

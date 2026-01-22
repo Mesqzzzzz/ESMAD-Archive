@@ -2,15 +2,19 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Para healthcheck com wget (alpine não traz por defeito)
 RUN apk add --no-cache wget
 
 COPY package*.json ./
-RUN npm ci
+
+# Build determinístico quando há lock; caso contrário cai para npm install
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
 
 COPY . .
 
+# garantir diretoria para SQLite (mesmo com volume)
+RUN mkdir -p /app/data
+
+ENV PORT=3002
 EXPOSE 3002
 
-# Preferimos dev se existir; senão troca para "npm start"
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]

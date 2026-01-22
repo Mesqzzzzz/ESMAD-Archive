@@ -1,0 +1,29 @@
+A) projects-service (core)
+
+Dono de: projetos, metadata do projeto, associação a user (criador), tags do projeto (se quiseres)
+
+Deve continuar a funcionar sozinho (sem search/notifications/audit)
+
+B) file-management-service (core auxiliar)
+
+Dono de: ficheiros + metadata técnica + ligação a projectId e uploadedBy
+
+Se cair: projetos continuam, só “ficheiros indisponíveis”
+
+C) search-service (auxiliar)
+
+Dono de: índice de pesquisa (read model)
+
+Se cair: UI usa listagem normal do projects-service (sem pesquisa avançada)
+
+D) notifications-service (auxiliar)
+
+Dono de: notificações (in-app; email opcional)
+
+Se cair: nada bloqueia, apenas não recebes notificações
+
+E) audit-log/activity-service (auxiliar)
+
+Dono de: registo de ações (timeline, debug)
+
+Se cair: sistema continua; no máximo perdes alguns logs momentaneamente

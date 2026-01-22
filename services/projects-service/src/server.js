@@ -9,22 +9,33 @@ import { typeDefs } from "./graphql/schema.js";
 import { resolvers } from "./graphql/resolvers.js";
 import { initDb } from "./db/index.js";
 
-const PORT = process.env.PORT || 3002;
+const PORT = Number(process.env.PORT || 3002);
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 
 async function start() {
-  // 1) Init DB (cria tabelas se não existirem)
   await initDb();
 
-  // 2) Express app
   const app = express();
-  app.use(cors());
-  app.use(express.json());
 
-  // 3) (Opcional) extrair user do JWT para futuro
+  app.use(
+    cors({
+      origin:
+        CORS_ORIGIN === "*"
+          ? true
+          : CORS_ORIGIN.split(",").map((s) => s.trim()),
+      credentials: true,
+    }),
+  );
+
+  app.use(express.json({ limit: "1mb" }));
+
+  // extrair user do JWT
   app.use((req, _res, next) => {
     const auth = req.headers.authorization || "";
     const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
+
+    req.token = token || null;
 
     if (!token) {
       req.user = null;
@@ -40,10 +51,8 @@ async function start() {
     next();
   });
 
-  // 4) Healthcheck
   app.get("/health", (_req, res) => res.json({ ok: true }));
 
-  // 5) Apollo GraphQL
   const server = new ApolloServer({ typeDefs, resolvers });
   await server.start();
 
@@ -51,14 +60,15 @@ async function start() {
     "/graphql",
     expressMiddleware(server, {
       context: async ({ req }) => ({
-        user: req.user ?? null, // disponível em ctx.user nos resolvers
+        user: req.user ?? null,
+        token: req.token ?? null, // ✅ importante
       }),
     }),
   );
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`projects-service running on http://localhost:${PORT}`);
-    console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`);
+    console.log(`projects-service listening on 0.0.0.0:${PORT}`);
+    console.log(`GraphQL: /graphql | Health: /health`);
   });
 }
 

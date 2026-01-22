@@ -43,13 +43,24 @@ def attach_file_to_project(file_id: str, project_id: str) -> Optional[dict]:
             cur.execute(
                 """
                 UPDATE files
-                SET project_id=%s
-                WHERE id=%s
+                SET project_id = NULL
+                WHERE project_id = %s
+                  AND id <> %s
+                """,
+                (project_id, file_id),
+            )
+
+            cur.execute(
+                """
+                UPDATE files
+                SET project_id = %s
+                WHERE id = %s
                 RETURNING *
                 """,
                 (project_id, file_id),
             )
             return cur.fetchone()
+
 
 def mark_file_deleted(file_id: str) -> Optional[dict]:
     with get_conn() as conn:

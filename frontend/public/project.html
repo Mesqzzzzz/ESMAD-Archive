@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Projeto</title>
+    <style>
+      body {
+        font-family: system-ui, Arial;
+        background: #fff;
+        margin: 0;
+      }
+      header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .card {
+        border: 1px solid #eee;
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+      }
+      .meta {
+        color: #666;
+        font-size: 13px;
+        margin-top: 6px;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+      button,
+      a.btn {
+        padding: 10px 14px;
+        border: 0;
+        border-radius: 10px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .primary {
+        background: #f05a31;
+        color: white;
+      }
+      .ghost {
+        background: #eee;
+        color: #111;
+      }
+      .pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #bbbcc1;
+        font-size: 12px;
+      }
+      .status {
+        margin-top: 12px;
+        font-size: 13px;
+        color: #333;
+      }
+      pre {
+        background: #fafafa;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        padding: 12px;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <strong>ESMAD Archive</strong> <span class="pill">Projeto</span>
+      </div>
+      <a class="btn ghost" href="projects.html">← Voltar</a>
+    </header>
+
+    <main>
+      <div class="card">
+        <h1 id="title" style="margin: 0">(a carregar...)</h1>
+        <div class="meta" id="meta"></div>
+
+        <p id="description" style="margin-top: 12px; white-space: pre-wrap"></p>
+
+        <div class="actions">
+          <button class="primary" id="downloadBtn" disabled>Download</button>
+
+          <a
+            class="btn ghost"
+            id="repoBtn"
+            href="#"
+            target="_blank"
+            rel="noreferrer"
+            style="display: none"
+            >Repo</a
+          >
+          <a
+            class="btn ghost"
+            id="demoBtn"
+            href="#"
+            target="_blank"
+            rel="noreferrer"
+            style="display: none"
+            >Demo</a
+          >
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <details style="margin-top: 14px">
+          <summary>Debug (JSON)</summary>
+          <pre id="debug"></pre>
+        </details>
+      </div>
+    </main>
+
+    <script>
+      const API_BASE = "http://localhost:3000";
+      const GRAPHQL_URL = `${API_BASE}/graphql`;
+
+      function setStatus(msg) {
+        document.getElementById("status").textContent = msg || "";
+      }
+
+      function getToken() {
+        return localStorage.getItem("token");
+      }
+
+      function getProjectId() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get("id");
+      }
+
+      async function gql(query, variables = {}) {
+        const token = getToken();
+        const res = await fetch(GRAPHQL_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ query, variables }),
+        });
+
+        const json = await res.json();
+        if (json.errors?.length) throw new Error(json.errors[0].message);
+        return json.data;
+      }
+
+      async function fetchProject(id) {
+        const data = await gql(
+          `
+          query ($id: ID!) {
+            project(id: $id) {
+              id
+              title
+              description
+              repoUrl
+              demoUrl
+              createdAt
+              fileId
+            }
+          }
+        `,
+          { id },
+        );
+        return data.project;
+      }
+
+      async function fetchDownloadUrl(fileId) {
+        const token = getToken();
+        if (!token) throw new Error("Faz login para descarregar.");
+
+        const res = await fetch(
+          `${API_BASE}/files/${encodeURIComponent(fileId)}/download`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (!res.ok) {
+          const txt = await res.text().catch(() => "");
+          throw new Error(
+            `Erro no download (${res.status}): ${txt || "sem detalhe"}`,
+          );
+        }
+
+        const json = await res.json();
+        if (!json.downloadUrl)
+          throw new Error("Resposta inválida: falta downloadUrl");
+
+        return json.downloadUrl;
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        const id = getProjectId();
+        if (!id) {
+          setStatus("Falta ?id=...");
+          return;
+        }
+
+        const downloadBtn = document.getElementById("downloadBtn");
+        downloadBtn.disabled = true;
+
+        try {
+          const p = await fetchProject(id);
+          if (!p) {
+            setStatus("Projeto não encontrado.");
+            return;
+          }
+
+          document.getElementById("title").textContent = p.title;
+          document.getElementById("description").textContent =
+            p.description || "";
+          document.getElementById("meta").textContent =
+            `ID: ${p.id} • Criado: ${p.createdAt ? new Date(p.createdAt).toLocaleString("pt-PT") : "-"}`;
+
+          document.getElementById("debug").textContent = JSON.stringify(
+            p,
+            null,
+            2,
+          );
+
+          if (p.repoUrl) {
+            const btn = document.getElementById("repoBtn");
+            btn.href = p.repoUrl;
+            btn.style.display = "inline-flex";
+          }
+          if (p.demoUrl) {
+            const btn = document.getElementById("demoBtn");
+            btn.href = p.demoUrl;
+            btn.style.display = "inline-flex";
+          }
+
+          if (!p.fileId) {
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = "Sem ficheiro";
+            setStatus("Este projeto não tem ficheiro associado.");
+            return;
+          }
+
+          // ✅ download real
+          downloadBtn.disabled = false;
+          downloadBtn.textContent = "Download";
+
+          downloadBtn.addEventListener("click", async () => {
+            try {
+              setStatus("A gerar link de download...");
+              downloadBtn.disabled = true;
+
+              const url = await fetchDownloadUrl(p.fileId);
+
+              setStatus("A abrir download...");
+              // abre num novo separador (melhor para presigned urls)
+              window.open(url, "_blank", "noopener,noreferrer");
+            } catch (e) {
+              console.error(e);
+              setStatus(e.message || "Erro ao descarregar");
+            } finally {
+              downloadBtn.disabled = false;
+            }
+          });
+
+          setStatus("Pronto.");
+        } catch (err) {
+          console.error(err);
+          setStatus(err.message || "Erro a carregar projeto");
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,4 +1,8 @@
 require("dotenv").config();
+
+// força a ligação + init do Postgres
+require("../db");
+
 const express = require("express");
 const cors = require("cors");
 

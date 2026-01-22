@@ -53,11 +53,12 @@ def init_upload(
     upload_url = presigned_put_url(object_key=object_key, content_type=body.contentType)
 
     return FileInitResponse(
-        fileId=row["id"],
-        objectKey=object_key,
-        uploadUrl=upload_url,
-        expiresInSeconds=settings.PRESIGNED_EXPIRES_SECONDS,
-    )
+    fileId=str(row["id"]),
+    objectKey=object_key,
+    uploadUrl=upload_url,
+    expiresInSeconds=settings.PRESIGNED_EXPIRES_SECONDS,
+)
+
 
 
 @router.post("/{file_id}/complete", response_model=FileCompleteResponse)
@@ -92,10 +93,11 @@ def attach_to_project(
     if str(row["owner_user_id"]) != str(user_id):
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    try:
-        updated = models.attach_file_to_project(file_id=file_id, project_id=body.projectId)
-    except Exception:
-        raise HTTPException(status_code=409, detail="Project already has a file")
+    # ✅ 1 ficheiro por projeto: o models.attach_file_to_project faz detach do anterior e attach deste
+    updated = models.attach_file_to_project(file_id=file_id, project_id=body.projectId)
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="File not found")
 
     return FileCompleteResponse(file=_to_public(updated))
 

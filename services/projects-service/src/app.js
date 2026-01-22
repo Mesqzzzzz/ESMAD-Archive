@@ -1,29 +1,37 @@
-import express from "express";
-import cors from "cors";
-import jwt from "jsonwebtoken";
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const routes = require("./routes");
+const { createProxyMiddleware } = require("http-proxy-middleware");
 
-export function buildApp() {
-  const app = express();
-  app.use(cors());
-  app.use(express.json());
+const app = express();
 
-  // middleware opcional: extrai user do Authorization: Bearer <token>
-  app.use((req, _res, next) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
+app.use(cors());
+app.use(express.json());
 
-    if (token) {
-      try {
-        const secret = process.env.JWT_SECRET || "supersecretkey";
-        req.user = jwt.verify(token, secret);
-      } catch {
-        req.user = null;
+app.get("/health", (req, res) => res.status(200).send("ok"));
+
+// ✅ Proxy direto para GraphQL do projects-service
+const PROJECTS_URL =
+  process.env.PROJECTS_SERVICE_URL || "http://projects-service:3002";
+app.use(
+  "/graphql",
+  createProxyMiddleware({
+    target: PROJECTS_URL,
+    changeOrigin: true,
+    // passa headers (incluindo Authorization)
+    onProxyReq: (proxyReq, req) => {
+      if (req.headers.authorization) {
+        proxyReq.setHeader("Authorization", req.headers.authorization);
       }
-    } else {
-      req.user = null;
-    }
-    next();
-  });
+    },
+  }),
+);
 
-  return app;
-}
+app.use("/", routes);
+
+app.get("/", (req, res) => {
+  res.send("API Gateway is running");
+});
+
+module.exports = app;

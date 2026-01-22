@@ -1,0 +1,125 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: esmad
+      POSTGRES_USER: esmad
+      POSTGRES_PASSWORD: esmadpass
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - esmad_net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U esmad -d esmad"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    networks:
+      - esmad_net
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  users-service:
+    image: esmad-archive/users-service:latest
+    environment:
+      PORT: "3001"
+      DATABASE_URL: postgres://esmad:esmadpass@postgres:5432/esmad
+      JWT_SECRET: supersecretkey
+    networks:
+      - esmad_net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  projects-service:
+    image: esmad-archive/projects-service:latest
+    environment:
+      PORT: "3002"
+      DATABASE_URL: postgres://esmad:esmadpass@postgres:5432/esmad
+      JWT_SECRET: supersecretkey
+      FILES_SERVICE_INTERNAL_URL: http://files-manager-service:3004
+    networks:
+      - esmad_net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  files-manager-service:
+    image: esmad-archive/files-manager-service:latest
+    environment:
+      PORT: "3004"
+      SERVICE_NAME: files-manager-service
+      DATABASE_URL: postgres://esmad:esmadpass@postgres:5432/esmad
+      JWT_SECRET: supersecretkey
+      S3_ENDPOINT_INTERNAL: http://minio:9000
+      S3_PUBLIC_ENDPOINT: http://localhost:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET: esmad-files
+      S3_REGION: us-east-1
+
+      PRESIGNED_EXPIRES_SECONDS: "900"
+      MAX_FILE_SIZE_BYTES: "52428800"
+      ALLOWED_CONTENT_TYPES: application/pdf,application/zip,application/x-zip-compressed
+    networks:
+      - esmad_net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  api-gateway:
+    image: esmad-archive/api-gateway:latest
+    environment:
+      PORT: "3000"
+      USERS_SERVICE_URL: http://users-service:3001
+      PROJECTS_SERVICE_URL: http://projects-service:3002
+      FILES_SERVICE_URL: http://files-manager-service:3004
+    networks:
+      - esmad_net
+    ports:
+      - "3000:3000"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  frontend:
+    image: esmad-archive/frontend:latest
+    networks:
+      - esmad_net
+    ports:
+      - "8080:80"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  pg_data:
+  minio_data:
+
+networks:
+  esmad_net:
+    driver: overlay
+    attachable: true

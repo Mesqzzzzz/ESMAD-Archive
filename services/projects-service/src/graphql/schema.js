@@ -13,6 +13,9 @@ export const typeDefs = gql`
     creatorUserId: String
     visibility: String!
 
+    # 1 ficheiro por projeto
+    fileId: ID
+
     ucIds: [ID!]!
     tags: [String!]!
   }
@@ -43,6 +46,9 @@ export const typeDefs = gql`
     coverImageUrl: String
     ucIds: [ID!] = []
     tags: [String!] = []
+
+    # obrigatório: 1 ficheiro por projeto
+    fileId: ID!
   }
 
   input UpdateProjectInput {
@@ -53,6 +59,9 @@ export const typeDefs = gql`
     coverImageUrl: String
     ucIds: [ID!]
     tags: [String!]
+
+    # opcional: permitir trocar/associar ficheiro no futuro
+    fileId: ID
   }
 
   type Query {

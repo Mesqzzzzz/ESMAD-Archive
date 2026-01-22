@@ -211,16 +211,28 @@
           body: JSON.stringify({ query, variables }),
         });
 
-        const text = await res.text();
+        const text = await res.text().catch(() => "");
         let json;
         try {
-          json = JSON.parse(text);
+          json = text ? JSON.parse(text) : null;
         } catch {
-          console.error("Resposta não-JSON:", text);
-          throw new Error("Backend não devolveu JSON (ver consola)");
+          console.error("Resposta não-JSON:", res.status, text);
+          throw new Error(`Backend não devolveu JSON (HTTP ${res.status})`);
         }
 
-        if (json.errors?.length) {
+        // ✅ trata HTTP 400/500
+        if (!res.ok) {
+          console.error("HTTP error:", res.status, json);
+          const msg =
+            json?.errors?.[0]?.message ||
+            json?.message ||
+            json?.error ||
+            text ||
+            `HTTP ${res.status}`;
+          throw new Error(msg);
+        }
+
+        if (json?.errors?.length) {
           console.error("GraphQL errors:", json.errors);
           throw new Error(json.errors[0].message || "Erro GraphQL");
         }
@@ -403,7 +415,8 @@
           `,
           { filters, page: { limit: 50, offset: 0 } },
         );
-
+        if (!data?.projects)
+          throw new Error("Resposta inválida do backend: falta 'projects'");
         renderProjects(data.projects.items, data.projects.total);
       }
 

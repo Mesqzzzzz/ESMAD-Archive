@@ -244,16 +244,77 @@
           },
           body: JSON.stringify({ query, variables }),
         });
-        const json = await res.json();
-        if (json.errors?.length)
-          throw new Error(json.errors[0].message || "Erro GraphQL");
+
+        const text = await res.text().catch(() => "");
+        let json = null;
+
+        try {
+          json = text ? JSON.parse(text) : null;
+        } catch {
+          console.error("GraphQL non-JSON response:", res.status, text);
+          throw new Error(`GraphQL: resposta não-JSON (HTTP ${res.status})`);
+        }
+
+        // erro HTTP (400/500/etc)
+        if (!res.ok) {
+          console.error("GraphQL HTTP error:", res.status, json);
+          const msg =
+            json?.errors?.[0]?.message ||
+            json?.message ||
+            text ||
+            `HTTP ${res.status}`;
+          throw new Error(msg);
+        }
+
+        // erro GraphQL (HTTP 200 mas com errors)
+        if (json?.errors?.length) {
+          console.error("GraphQL errors full:", json.errors);
+
+          const e0 = json.errors[0];
+
+          // tenta extrair algo mais útil do que "file attach failed"
+          const detail =
+            e0?.extensions?.detail ||
+            e0?.extensions?.response?.body?.detail ||
+            e0?.extensions?.response?.body?.message ||
+            e0?.extensions?.originalError?.message ||
+            e0?.extensions?.exception?.message ||
+            null;
+
+          const toStr = (v) => {
+            if (v == null) return "";
+            if (typeof v === "string") return v;
+            try {
+              return JSON.stringify(v);
+            } catch {
+              return String(v);
+            }
+          };
+
+          throw new Error(
+            detail
+              ? `${toStr(e0.message)} — ${toStr(detail)}`
+              : toStr(e0.message) || "Erro GraphQL",
+          );
+        }
+
         return json.data;
       }
 
+      function toPublicMinioUrl(url) {
+        try {
+          const u = new URL(url);
+          if (u.hostname === "minio") u.hostname = "localhost";
+          return u.toString();
+        } catch {
+          return url;
+        }
+      }
+
       async function uploadToPresignedUrl(uploadUrl, file) {
-        // IMPORTANTE: o presigned URL foi assinado com ContentType,
-        // então temos de mandar o mesmo Content-Type no PUT.
-        const res = await fetch(uploadUrl, {
+        const publicUrl = toPublicMinioUrl(uploadUrl);
+
+        const res = await fetch(publicUrl, {
           method: "PUT",
           headers: {
             "Content-Type": file.type || "application/octet-stream",
@@ -327,6 +388,8 @@
 
             const fileId = init.fileId;
             const uploadUrl = init.uploadUrl;
+            console.log("[init]", init);
+
             if (!fileId || !uploadUrl)
               throw new Error("Resposta inválida do /files/init");
 
@@ -344,16 +407,18 @@
 
             // 4) createProject (GraphQL)
             setStatus(`4/4 A criar projeto...`);
+            console.log("[createProject] input", { ...inputBase, fileId });
+
             const data = await gql(
               `
-            mutation ($input: CreateProjectInput!) {
-              createProject(input: $input) {
-                id
-                title
-                fileId
-              }
-            }
-            `,
+    mutation ($input: CreateProjectInput!) {
+      createProject(input: $input) {
+        id
+        title
+        fileId
+      }
+    }
+  `,
               { input: { ...inputBase, fileId } },
               token,
             );

@@ -2,7 +2,7 @@ import { gql } from "graphql-tag";
 
 export const typeDefs = gql`
   type Project {
-    id: ID!
+    id: Int!
     title: String!
     description: String
     repoUrl: String
@@ -13,7 +13,7 @@ export const typeDefs = gql`
     creatorUserId: String
     visibility: String!
 
-    # 1 ficheiro por projeto
+    # 1 ficheiro por projeto (uuid na BD)
     fileId: ID
 
     ucIds: [ID!]!
@@ -47,7 +47,7 @@ export const typeDefs = gql`
     ucIds: [ID!] = []
     tags: [String!] = []
 
-    # obrigatório: 1 ficheiro por projeto
+    # obrigatório: 1 ficheiro por projeto (uuid)
     fileId: ID!
   }
 
@@ -66,13 +66,13 @@ export const typeDefs = gql`
 
   type Query {
     health: String!
-    project(id: ID!): Project
+    project(id: Int!): Project
     projects(filters: ProjectFiltersInput, page: PaginationInput): ProjectsPage!
   }
 
   type Mutation {
     createProject(input: CreateProjectInput!): Project!
-    updateProject(id: ID!, input: UpdateProjectInput!): Project!
-    deleteProject(id: ID!): Boolean!
+    updateProject(id: Int!, input: UpdateProjectInput!): Project!
+    deleteProject(id: Int!): Boolean!
   }
 `;

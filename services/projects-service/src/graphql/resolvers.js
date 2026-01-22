@@ -7,7 +7,7 @@ const FILES_BASE =
 function mapProjectRow(row) {
   if (!row) return null;
   return {
-    id: String(row.id),
+    id: row.id, // ✅ number
     title: row.title,
     description: row.description,
     repoUrl: row.repo_url,
@@ -17,8 +17,6 @@ function mapProjectRow(row) {
     updatedAt: row.updated_at,
     creatorUserId: row.creator_user_id,
     visibility: row.visibility,
-
-    // ✅ vem diretamente do Postgres
     fileId: row.file_id ? String(row.file_id) : null,
   };
 }
@@ -193,7 +191,7 @@ export const resolvers = {
       return getProjectTags(db, project.id);
     },
 
-    // 🔗 Vai buscar o fileId ao files-manager (via project_id)
+    // 🔗 Vai buscar o fileId ao files-manager (via project_id) (opcional no futuro)
   },
 
   Mutation: {
@@ -206,13 +204,13 @@ export const resolvers = {
       // 1) cria projeto SEM file_id
       const insertRes = await db.query(
         `
-    INSERT INTO projects (
-      title, description, repo_url, demo_url, cover_image_url,
-      creator_user_id, visibility
-    )
-    VALUES ($1, $2, $3, $4, $5, $6, 'PUBLIC')
-    RETURNING *
-    `,
+        INSERT INTO projects (
+          title, description, repo_url, demo_url, cover_image_url,
+          creator_user_id, visibility
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, 'PUBLIC')
+        RETURNING *
+        `,
         [
           input.title,
           input.description ?? null,
@@ -235,8 +233,11 @@ export const resolvers = {
         // 2) anexa o ficheiro ao projeto (files.project_id)
         await axios.post(
           `${FILES_BASE}/files/${input.fileId}/attach`,
-          { projectId: String(projectId) },
-          { headers: { Authorization: `Bearer ${ctx.token}` }, timeout: 5000 },
+          { projectId: Number(projectId) }, // ✅ number
+          {
+            headers: { Authorization: `Bearer ${ctx.token}` },
+            timeout: 15000, // ✅ mais tolerante em Swarm
+          },
         );
 
         // 3) só agora guardas file_id no projeto
@@ -245,9 +246,48 @@ export const resolvers = {
           projectId,
         ]);
       } catch (e) {
+        const status = e?.response?.status;
+        const data = e?.response?.data;
+
+        console.error("[createProject] attach failed", {
+          projectId,
+          fileId: input.fileId,
+          status,
+          data,
+          message: e?.message,
+        });
+
         // rollback: apaga o projeto
-        await db.query(`DELETE FROM projects WHERE id = $1`, [projectId]);
-        throw new Error("Failed to create project (file attach failed)");
+        try {
+          await db.query(`DELETE FROM projects WHERE id = $1`, [projectId]);
+        } catch (rbErr) {
+          console.error(
+            "[createProject] rollback failed",
+            rbErr?.message || rbErr,
+          );
+        }
+
+        const pickDetail = (val) => {
+          if (val == null) return null;
+          if (typeof val === "string") return val;
+          // FastAPI costuma vir como { detail: ... }
+          if (typeof val === "object") {
+            if (typeof val.detail === "string") return val.detail;
+            if (typeof val.message === "string") return val.message;
+            try {
+              return JSON.stringify(val);
+            } catch {
+              return String(val);
+            }
+          }
+          return String(val);
+        };
+
+        const detail = pickDetail(data) || pickDetail(e?.message) || "unknown";
+
+        throw new Error(
+          `Failed to create project (file attach failed: ${detail})`,
+        );
       }
 
       const finalRes = await db.query(`SELECT * FROM projects WHERE id = $1`, [
@@ -281,14 +321,30 @@ export const resolvers = {
         try {
           await axios.post(
             `${FILES_BASE}/files/${input.fileId}/attach`,
-            { projectId: String(pid) },
+            { projectId: Number(pid) }, // ✅ number
             {
               headers: { Authorization: `Bearer ${ctx.token}` },
-              timeout: 5000,
+              timeout: 15000, // ✅ mais tolerante em Swarm
             },
           );
-        } catch {
-          throw new Error("Failed to attach new file");
+        } catch (e) {
+          const status = e?.response?.status;
+          const data = e?.response?.data;
+
+          console.error("[updateProject] attach failed", {
+            projectId: pid,
+            fileId: input.fileId,
+            status,
+            data,
+            message: e?.message,
+          });
+
+          const detail =
+            (typeof data === "string" ? data : data?.detail || data?.message) ||
+            e?.message ||
+            "unknown";
+
+          throw new Error(`Failed to attach new file: ${detail}`);
         }
       }
 
@@ -296,16 +352,16 @@ export const resolvers = {
 
       const updateRes = await db.query(
         `
-    UPDATE projects
-    SET title = $1,
-        description = $2,
-        repo_url = $3,
-        demo_url = $4,
-        cover_image_url = $5,
-        file_id = $6
-    WHERE id = $7
-    RETURNING *
-    `,
+        UPDATE projects
+        SET title = $1,
+            description = $2,
+            repo_url = $3,
+            demo_url = $4,
+            cover_image_url = $5,
+            file_id = $6
+        WHERE id = $7
+        RETURNING *
+        `,
         [
           next.title,
           next.description,
@@ -334,9 +390,6 @@ export const resolvers = {
       );
       const existing = existingRes.rows?.[0];
       if (!existing) return false;
-
-      // (Opcional) apagar ficheiro associado (se criares endpoint de delete por project no files-manager)
-      // if (ctx?.token) { ... }
 
       const delRes = await db.query(`DELETE FROM projects WHERE id = $1`, [
         pid,

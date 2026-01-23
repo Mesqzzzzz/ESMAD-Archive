@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - ESMAD Repository</title>
+    <title>Login · ESMAD Academic Repository</title>
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -18,92 +19,174 @@
         },
       };
     </script>
+
+    <style>
+      .ring-soft {
+        box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
+      }
+    </style>
   </head>
 
-  <body
-    class="bg-white font-sans text-gray-800 flex items-center justify-center h-screen"
-  >
-    <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
-      <h1 class="text-3xl font-bold text-primary mb-6 text-center">Login</h1>
-
-      <form id="loginForm" class="space-y-4">
-        <div>
-          <label for="email" class="block text-gray-700 font-medium mb-1"
-            >Email</label
-          >
-          <input
-            type="email"
-            id="email"
-            placeholder="teuemail@exemplo.com"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+  <body class="bg-white font-sans text-gray-900 min-h-screen">
+    <!-- Top bar -->
+    <div class="border-b border-gray-100">
+      <div
+        class="mx-auto max-w-7xl px-4 py-2 flex items-center justify-between text-xs text-gray-600"
+      >
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-primary"></span>
+          <span>ESMAD · Politécnico do Porto</span>
         </div>
-
-        <div>
-          <label for="password" class="block text-gray-700 font-medium mb-1"
-            >Password</label
-          >
-          <input
-            type="password"
-            id="password"
-            placeholder="********"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-
-        <div id="errorMsg" class="text-red-500 text-sm hidden">
-          Preencha todos os campos.
-        </div>
-
-        <button
-          type="submit"
-          class="w-full bg-primary text-white py-2 rounded-lg text-lg hover:opacity-90 transition"
-        >
-          Entrar
-        </button>
-      </form>
-
-      <p class="mt-4 text-gray-600 text-center">
-        Ainda não tens conta?
-        <a
-          href="register.html"
-          class="text-primary font-medium hover:underline"
-        >
-          Registar
-        </a>
-      </p>
+        <a href="index.html" class="hover:text-gray-900">Início</a>
+      </div>
     </div>
 
+    <!-- Centered content -->
+    <main class="flex items-center justify-center px-4 py-12">
+      <div class="w-full max-w-md">
+        <!-- Card -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-8 ring-soft">
+          <!-- Header -->
+          <div class="text-center">
+            <div
+              class="mx-auto h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center"
+              aria-hidden="true"
+            >
+              <div class="h-5 w-5 rounded-md bg-primary"></div>
+            </div>
+
+            <h1
+              class="mt-4 text-2xl font-semibold tracking-tight text-gray-900"
+            >
+              Login
+            </h1>
+            <p class="mt-1 text-sm text-gray-600">
+              Acede ao repositório académico
+            </p>
+          </div>
+
+          <!-- Form -->
+          <form id="loginForm" class="mt-6 space-y-5">
+            <div>
+              <label
+                for="email"
+                class="block text-sm font-semibold text-gray-700"
+              >
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                placeholder="teuemail@exemplo.com"
+                class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                autocomplete="email"
+                required
+              />
+            </div>
+
+            <div>
+              <label
+                for="password"
+                class="block text-sm font-semibold text-gray-700"
+              >
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                placeholder="••••••••"
+                class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                autocomplete="current-password"
+                required
+              />
+            </div>
+
+            <!-- Error -->
+            <div
+              id="errorMsg"
+              class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              Erro no login.
+            </div>
+
+            <!-- Submit -->
+            <button
+              id="submitBtn"
+              type="submit"
+              class="w-full inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Entrar
+            </button>
+          </form>
+
+          <!-- Footer -->
+          <p class="mt-6 text-center text-sm text-gray-600">
+            Ainda não tens conta?
+            <a
+              href="register.html"
+              class="font-semibold text-primary hover:underline"
+            >
+              Registar
+            </a>
+          </p>
+        </div>
+
+        <!-- Institutional note -->
+        <p class="mt-6 text-center text-xs text-gray-500">
+          A autenticação é necessária para criar projetos, descarregar ficheiros
+          e interagir com o repositório.
+        </p>
+      </div>
+    </main>
+
     <script>
+      const API_BASE = window.location.origin;
+      const LOGIN_URL = `${API_BASE}/auth/login`;
+
+      const loginForm = document.getElementById("loginForm");
+      const errorMsg = document.getElementById("errorMsg");
+      const submitBtn = document.getElementById("submitBtn");
+
       loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
+        errorMsg.classList.add("hidden");
+
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
 
         if (!email || !password) {
+          errorMsg.textContent = "Preenche todos os campos.";
           errorMsg.classList.remove("hidden");
           return;
         }
 
+        submitBtn.disabled = true;
+        submitBtn.textContent = "A autenticar...";
+
         try {
-          const response = await fetch("http://localhost:3000/auth/login", {
+          const response = await fetch(LOGIN_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
           });
 
-          const data = await response.json();
+          const data = await response.json().catch(() => ({}));
 
-          if (!response.ok) throw new Error(data.error || "Erro no login");
+          if (!response.ok) {
+            throw new Error(data.error || "Credenciais inválidas");
+          }
 
-          // Guardar JWT no localStorage
+          // Guardar sessão
           localStorage.setItem("token", data.token);
           localStorage.setItem("user", JSON.stringify(data.user));
 
           window.location.href = "projects.html";
         } catch (err) {
-          errorMsg.textContent = err.message;
+          errorMsg.textContent = err.message || "Erro no login";
           errorMsg.classList.remove("hidden");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Entrar";
         }
       });
     </script>

@@ -3,230 +3,295 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Projeto</title>
-    <style>
-      body {
-        font-family: system-ui, Arial;
-        background: #fff;
-        margin: 0;
-      }
-      header {
-        padding: 16px 20px;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-      }
-      main {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-      .card {
-        border: 1px solid #eee;
-        border-radius: 14px;
-        padding: 16px;
-        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
-      }
-      .meta {
-        color: #666;
-        font-size: 13px;
-        margin-top: 6px;
-      }
-      .actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 14px;
-        flex-wrap: wrap;
-      }
-      button,
-      a.btn {
-        padding: 10px 14px;
-        border: 0;
-        border-radius: 10px;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-      button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-      .primary {
-        background: #f05a31;
-        color: white;
-      }
-      .ghost {
-        background: #eee;
-        color: #111;
-      }
-      .pill {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: #bbbcc1;
-        font-size: 12px;
-      }
-      .status {
-        margin-top: 12px;
-        font-size: 13px;
-        color: #333;
-        white-space: pre-wrap;
-      }
-      pre {
-        background: #fafafa;
-        border: 1px solid #eee;
-        border-radius: 12px;
-        padding: 12px;
-        overflow: auto;
-      }
+    <title>Projeto · ESMAD Academic Repository</title>
 
-      /* ✅ Toast / Alert */
-      .toast-wrap {
-        position: fixed;
-        right: 18px;
-        bottom: 18px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        z-index: 9999;
-        pointer-events: none;
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#F05A31",
+              secondary: "#BBBCC1",
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      .ring-soft {
+        box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
       }
-      .toast {
-        pointer-events: auto;
-        width: min(420px, calc(100vw - 36px));
-        border-radius: 14px;
-        padding: 12px 12px 10px;
-        background: #111;
-        color: #fff;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+      .lc-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
       }
-      .toast .top {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 12px;
-      }
-      .toast .title {
-        font-weight: 700;
-        font-size: 14px;
-        margin: 0;
-      }
-      .toast .close {
-        background: transparent;
-        color: #fff;
-        border: 0;
-        font-size: 18px;
-        line-height: 18px;
-        cursor: pointer;
-        padding: 4px 6px;
-        opacity: 0.9;
-      }
-      .toast .msg {
-        margin: 8px 0 0;
-        font-size: 13px;
-        color: rgba(255, 255, 255, 0.92);
-        white-space: pre-wrap;
-      }
-      .toast .meta2 {
-        margin-top: 8px;
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.7);
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-      }
-      .toast .btnrow {
-        margin-top: 10px;
-        display: flex;
-        gap: 10px;
-        justify-content: flex-end;
-      }
-      .toast .btnsmall {
-        padding: 8px 10px;
-        border-radius: 10px;
-        border: 0;
-        cursor: pointer;
-        font-size: 13px;
-      }
-      .toast .btnok {
-        background: #f05a31;
-        color: #fff;
-      }
-      .toast .btnghost {
-        background: rgba(255, 255, 255, 0.12);
-        color: #fff;
+      .lc-6 {
+        display: -webkit-box;
+        -webkit-line-clamp: 6;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
       }
     </style>
   </head>
-  <body>
-    <header>
-      <div>
-        <strong>ESMAD Archive</strong> <span class="pill">Projeto</span>
-      </div>
-      <a class="btn ghost" href="projects.html">← Voltar</a>
-    </header>
 
-    <main>
-      <div class="card">
-        <h1 id="title" style="margin: 0">(a carregar...)</h1>
-        <div class="meta" id="meta"></div>
-
-        <p id="description" style="margin-top: 12px; white-space: pre-wrap"></p>
-
-        <div class="actions">
-          <button class="primary" id="downloadBtn" disabled>Download</button>
-
-          <a
-            class="btn ghost"
-            id="repoBtn"
-            href="#"
-            target="_blank"
-            rel="noreferrer"
-            style="display: none"
-            >Repo</a
-          >
-          <a
-            class="btn ghost"
-            id="demoBtn"
-            href="#"
-            target="_blank"
-            rel="noreferrer"
-            style="display: none"
-            >Demo</a
-          >
+  <body class="bg-white font-sans text-gray-900">
+    <!-- Top bar -->
+    <div class="border-b border-gray-100">
+      <div
+        class="mx-auto max-w-7xl px-4 py-2 flex items-center justify-between text-xs text-gray-600"
+      >
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-primary"></span>
+            Detalhe do Projeto
+          </span>
+          <span class="hidden sm:inline text-gray-300">|</span>
+          <span class="hidden sm:inline">ESMAD · Politécnico do Porto</span>
         </div>
 
-        <div class="status" id="status"></div>
+        <div class="hidden sm:flex items-center gap-4">
+          <a href="index.html" class="hover:text-gray-900">Início</a>
+          <a href="projects.html" class="hover:text-gray-900">Projetos</a>
+          <a href="login.html" class="hover:text-gray-900">Login</a>
+        </div>
+      </div>
+    </div>
 
-        <details style="margin-top: 14px">
-          <summary>Debug (JSON)</summary>
-          <pre id="debug"></pre>
-        </details>
+    <!-- Header -->
+    <header
+      class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100"
+    >
+      <nav
+        class="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between"
+      >
+        <a href="index.html" class="flex items-center gap-3">
+          <div
+            class="h-10 w-10 rounded-xl bg-primary/10 ring-soft flex items-center justify-center"
+            aria-hidden="true"
+          >
+            <div class="h-5 w-5 rounded-md bg-primary"></div>
+          </div>
+          <div class="leading-tight">
+            <div class="text-sm font-semibold tracking-wide text-gray-900">
+              ESMAD Academic Repository
+            </div>
+            <div class="text-xs text-gray-500">
+              Consulta institucional de projetos
+            </div>
+          </div>
+        </a>
+
+        <div class="flex items-center gap-3">
+          <a
+            id="backBtn"
+            href="projects.html"
+            class="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition ring-soft"
+          >
+            ← Voltar
+          </a>
+
+          <button
+            id="downloadBtn"
+            class="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled
+            type="button"
+          >
+            Download
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Main card -->
+        <section class="lg:col-span-8">
+          <article
+            class="rounded-2xl border border-gray-100 bg-white p-6 ring-soft"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <div
+                  class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary ring-soft"
+                >
+                  <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                  Projeto
+                </div>
+
+                <h1
+                  id="title"
+                  class="mt-4 text-2xl md:text-3xl font-semibold tracking-tight text-gray-900"
+                >
+                  (a carregar...)
+                </h1>
+
+                <p id="meta" class="mt-2 text-sm text-gray-600"></p>
+              </div>
+
+              <div
+                class="shrink-0 h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center"
+                aria-hidden="true"
+              >
+                <div class="h-3 w-3 rounded-sm bg-primary"></div>
+              </div>
+            </div>
+
+            <div class="mt-6 border-t border-gray-100 pt-5">
+              <h2 class="text-sm font-semibold text-gray-900">Descrição</h2>
+              <p
+                id="description"
+                class="mt-2 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed"
+              ></p>
+            </div>
+
+            <div class="mt-6 flex flex-wrap gap-3">
+              <a
+                id="repoBtn"
+                href="#"
+                target="_blank"
+                rel="noreferrer"
+                class="hidden inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition ring-soft"
+              >
+                Repo
+              </a>
+
+              <a
+                id="demoBtn"
+                href="#"
+                target="_blank"
+                rel="noreferrer"
+                class="hidden inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition ring-soft"
+              >
+                Demo
+              </a>
+
+              <span
+                id="fileBadge"
+                class="hidden inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700"
+              ></span>
+            </div>
+
+            <!-- Status -->
+            <div
+              id="statusWrap"
+              class="mt-6 rounded-2xl border border-gray-100 bg-gray-50 p-4 ring-soft"
+            >
+              <p class="text-xs font-semibold text-gray-700">Estado</p>
+              <p
+                id="status"
+                class="mt-1 text-sm text-gray-700 whitespace-pre-wrap"
+              ></p>
+            </div>
+
+            <!-- Debug -->
+            <details class="mt-6">
+              <summary
+                class="cursor-pointer text-sm font-semibold text-gray-700"
+              >
+                Debug (JSON)
+              </summary>
+              <pre
+                id="debug"
+                class="mt-3 rounded-2xl border border-gray-100 bg-white p-4 text-xs overflow-auto ring-soft"
+              ></pre>
+            </details>
+          </article>
+        </section>
+
+        <!-- Side info -->
+        <aside class="lg:col-span-4">
+          <div
+            class="rounded-2xl border border-gray-100 bg-white p-6 ring-soft"
+          >
+            <h3 class="text-sm font-semibold text-gray-900">
+              Acesso e permissões
+            </h3>
+            <p class="mt-2 text-sm text-gray-600">
+              A consulta é pública. Para descarregar anexos, é necessário login.
+            </p>
+
+            <div class="mt-5 space-y-3">
+              <div class="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                <p class="text-xs text-gray-500">Sem login</p>
+                <p class="mt-1 text-sm font-semibold text-gray-900">
+                  Visualizar detalhes do projeto
+                </p>
+              </div>
+              <div class="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                <p class="text-xs text-gray-500">Com login</p>
+                <p class="mt-1 text-sm font-semibold text-gray-900">
+                  Descarregar ficheiros e aceder a recursos
+                </p>
+              </div>
+            </div>
+
+            <a
+              id="loginCta"
+              href="login.html"
+              class="mt-5 hidden w-full inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition"
+            >
+              Fazer login
+            </a>
+
+            <p class="mt-4 text-xs text-gray-500">
+              Nota: se o projeto não tiver ficheiro associado, o download ficará
+              indisponível.
+            </p>
+          </div>
+
+          <!-- Notificações -->
+          <div
+            class="mt-6 rounded-2xl border border-gray-100 bg-white p-6 ring-soft"
+          >
+            <h3 class="text-sm font-semibold text-gray-900">Notificações</h3>
+            <p class="mt-2 text-sm text-gray-600">
+              Alertas surgem automaticamente quando existirem notificações por
+              ler.
+            </p>
+            <p id="notifHint" class="mt-3 text-xs text-gray-500"></p>
+          </div>
+        </aside>
       </div>
     </main>
 
-    <!-- ✅ Toast container -->
-    <div class="toast-wrap" id="toastWrap"></div>
+    <!-- Toast container -->
+    <div
+      id="toastWrap"
+      class="fixed right-4 bottom-4 z-[9999] flex flex-col gap-3 pointer-events-none"
+    ></div>
 
     <script>
-      const API_BASE = window.location.origin; // força porta correta (ex: http://localhost:8080)
+      // ==========================
+      // CONFIG
+      // ==========================
+      const API_BASE = window.location.origin; // ex: http://localhost:8080
       const GRAPHQL_URL = `${API_BASE}/graphql`;
-      console.log("[DEBUG] API_BASE =", API_BASE);
 
+      // ==========================
+      // UI HELPERS
+      // ==========================
       function setStatus(msg) {
         document.getElementById("status").textContent = msg || "";
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
       }
 
       function getToken() {
         return localStorage.getItem("token");
       }
 
-      // ✅ devolve Int (e valida)
+      // devolve Int (valida)
       function getProjectIdInt() {
         const params = new URLSearchParams(window.location.search);
         const raw = params.get("id");
@@ -256,7 +321,6 @@
         }
 
         if (!res.ok) {
-          console.error("HTTP error:", res.status, json);
           const msg =
             json?.errors?.[0]?.message ||
             json?.message ||
@@ -267,13 +331,15 @@
         }
 
         if (json?.errors?.length) {
-          console.error("GraphQL errors:", json.errors);
           throw new Error(json.errors[0].message || "Erro GraphQL");
         }
 
         return json.data;
       }
 
+      // ==========================
+      // DATA FETCHING
+      // ==========================
       async function fetchProject(id) {
         const data = await gql(
           `
@@ -300,10 +366,7 @@
 
         const res = await fetch(
           `${API_BASE}/files/${encodeURIComponent(fileId)}/download`,
-          {
-            method: "GET",
-            headers: { Authorization: `Bearer ${token}` },
-          },
+          { method: "GET", headers: { Authorization: `Bearer ${token}` } },
         );
 
         if (!res.ok) {
@@ -316,15 +379,14 @@
         const json = await res.json();
         if (!json.downloadUrl)
           throw new Error("Resposta inválida: falta downloadUrl");
-
         return json.downloadUrl;
       }
 
-      // =========================================================
-      // ✅ NOTIFICATIONS (ALERTA)
-      // =========================================================
-
+      // ==========================
+      // NOTIFICATIONS (Toast)
+      // ==========================
       const toastWrap = document.getElementById("toastWrap");
+      const notifHint = document.getElementById("notifHint");
       let notifTimer = null;
       let lastShownNotificationId = null;
 
@@ -339,7 +401,6 @@
       }
 
       function pickMessage(n) {
-        // tenta vários nomes (para ser compatível com diferentes schemas)
         return (
           n.message ||
           n.text ||
@@ -361,6 +422,8 @@
         if (!token) return;
 
         try {
+          // Se o teu gateway servir frontend+api no mesmo origin, relativo está OK.
+          // Se precisares, troca para: `${API_BASE}/notifications/${id}/read`
           const res = await fetch(`/notifications/${id}/read`, {
             method: "POST",
             headers: {
@@ -379,54 +442,55 @@
 
       function showToastForNotification(n) {
         if (!n || !n.id) return;
-
-        // ✅ evita repetir o mesmo alerta
         if (String(n.id) === String(lastShownNotificationId)) return;
         lastShownNotificationId = String(n.id);
 
         const toastId = `toast_${n.id}`;
         const createdAt =
           n.createdAt || n.created_at || n.at || n.timestamp || null;
-
         const msg = pickMessage(n);
 
         const el = document.createElement("div");
-        el.className = "toast";
         el.id = toastId;
+        el.className =
+          "pointer-events-auto w-[min(420px,calc(100vw-2rem))] rounded-2xl bg-gray-950 text-white border border-white/10 shadow-2xl p-4";
 
         el.innerHTML = `
-          <div class="top">
-            <div>
-              <p class="title">Nova notificação ✅</p>
-              <div class="msg">${escapeHtml(msg)}</div>
-              <div class="meta2">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm font-semibold">Nova notificação ✅</p>
+              <p class="mt-2 text-sm text-white/90 whitespace-pre-wrap">${escapeHtml(msg)}</p>
+
+              <div class="mt-3 flex items-center justify-between gap-4 text-xs text-white/60">
                 <span>${createdAt ? safeDate(createdAt) : ""}</span>
                 <span>#${escapeHtml(String(n.id))}</span>
               </div>
-              <div class="btnrow">
-                <button class="btnsmall btnghost" data-action="dismiss">Ignorar</button>
-                <button class="btnsmall btnok" data-action="ok">OK</button>
+
+              <div class="mt-4 flex gap-2 justify-end">
+                <button class="rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold hover:bg-white/15 transition" data-action="dismiss">
+                  Ignorar
+                </button>
+                <button class="rounded-xl bg-primary px-3 py-2 text-sm font-semibold hover:opacity-90 transition" data-action="ok">
+                  OK
+                </button>
               </div>
             </div>
-            <button class="close" aria-label="Fechar" data-action="close">×</button>
+
+            <button class="rounded-xl px-2 py-1 text-white/80 hover:text-white transition" aria-label="Fechar" data-action="close">
+              ×
+            </button>
           </div>
         `;
 
         el.addEventListener("click", async (ev) => {
           const btn = ev.target?.closest?.("[data-action]");
           if (!btn) return;
-          const action = btn.getAttribute("data-action");
-
-          // em qualquer caso, removemos o toast
           removeToast(toastId);
-
-          // ✅ marca como lida ao fechar/ok/ignorar
           await markNotificationRead(n.id);
         });
 
         toastWrap.appendChild(el);
 
-        // auto-remove após 7s + marca lida também
         setTimeout(async () => {
           const stillThere = document.getElementById(toastId);
           if (stillThere) {
@@ -436,20 +500,10 @@
         }, 7000);
       }
 
-      function escapeHtml(str) {
-        return String(str)
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#039;");
-      }
-
       async function fetchUnreadNotifications(limit = 1) {
         const token = getToken();
         if (!token) return [];
 
-        // ✅ URL RELATIVO: vai sempre ao mesmo origin (http://localhost:8080)
         const url = `/notifications/?unread=true&limit=${encodeURIComponent(limit)}&offset=0`;
 
         const res = await fetch(url, {
@@ -464,8 +518,6 @@
         }
 
         const json = await res.json().catch(() => null);
-
-        // suporta backend a devolver array direto OU objeto com items
         if (Array.isArray(json)) return json;
 
         const items =
@@ -481,50 +533,62 @@
       async function checkNotificationsOnce() {
         try {
           const items = await fetchUnreadNotifications(1);
-          if (items.length > 0) {
-            showToastForNotification(items[0]);
-          }
+          if (items.length > 0) showToastForNotification(items[0]);
         } catch (e) {
           console.warn("checkNotificationsOnce error:", e);
         }
       }
 
       function startNotificationsPolling() {
-        // dispara logo
-        checkNotificationsOnce();
+        if (!getToken()) {
+          notifHint.textContent =
+            "Faz login para receberes alertas de notificações.";
+          return;
+        }
+        notifHint.textContent = "A monitorizar notificações (polling).";
 
-        // polling
+        checkNotificationsOnce();
         if (notifTimer) clearInterval(notifTimer);
         notifTimer = setInterval(checkNotificationsOnce, 3000);
       }
 
-      // =========================================================
-
+      // ==========================
+      // INIT
+      // ==========================
       document.addEventListener("DOMContentLoaded", async () => {
         const { raw, id } = getProjectIdInt();
+        const downloadBtn = document.getElementById("downloadBtn");
+        const loginCta = document.getElementById("loginCta");
+
+        if (!getToken()) loginCta.classList.remove("hidden");
+
+        // start notifications
+        startNotificationsPolling();
+
         if (!id) {
           setStatus(`Falta ?id=... (valor atual: ${raw || "null"})`);
+          downloadBtn.disabled = true;
+          downloadBtn.textContent = "Download";
           return;
         }
 
-        const downloadBtn = document.getElementById("downloadBtn");
-        downloadBtn.disabled = true;
-
-        // ✅ começa polling de notificações (só mostra se houver token e unread)
-        startNotificationsPolling();
+        setStatus("A carregar projeto...");
 
         try {
           const p = await fetchProject(id);
+
           if (!p) {
             setStatus("Projeto não encontrado.");
             return;
           }
 
-          document.getElementById("title").textContent = p.title;
+          document.getElementById("title").textContent = p.title || "Projeto";
           document.getElementById("description").textContent =
             p.description || "";
           document.getElementById("meta").textContent =
-            `ID: ${p.id} • Criado: ${p.createdAt ? new Date(p.createdAt).toLocaleString("pt-PT") : "-"}`;
+            `ID: ${p.id} • Criado: ${
+              p.createdAt ? new Date(p.createdAt).toLocaleString("pt-PT") : "-"
+            }`;
 
           document.getElementById("debug").textContent = JSON.stringify(
             { urlIdRaw: raw, urlIdInt: id, project: p },
@@ -532,17 +596,26 @@
             2,
           );
 
+          // Repo/Demo
           if (p.repoUrl) {
             const btn = document.getElementById("repoBtn");
             btn.href = p.repoUrl;
-            btn.style.display = "inline-flex";
+            btn.classList.remove("hidden");
           }
           if (p.demoUrl) {
             const btn = document.getElementById("demoBtn");
             btn.href = p.demoUrl;
-            btn.style.display = "inline-flex";
+            btn.classList.remove("hidden");
           }
 
+          // File badge
+          const fileBadge = document.getElementById("fileBadge");
+          if (p.fileId) {
+            fileBadge.textContent = `Ficheiro: ${p.fileId}`;
+            fileBadge.classList.remove("hidden");
+          }
+
+          // Download
           if (!p.fileId) {
             downloadBtn.disabled = true;
             downloadBtn.textContent = "Sem ficheiro";

@@ -18,129 +18,290 @@
         },
       };
     </script>
+
+    <style>
+      .ring-soft {
+        box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
+      }
+      /* line-clamp via utility fallback (caso não tenhas plugin) */
+      .lc-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .lc-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+    </style>
   </head>
 
-  <body class="bg-white font-sans text-gray-800">
-    <!-- Navbar -->
-    <nav class="bg-white shadow-md">
+  <body class="bg-white font-sans text-gray-900">
+    <!-- Top bar (institucional) -->
+    <div class="border-b border-gray-100">
       <div
-        class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between"
+        class="mx-auto max-w-7xl px-4 py-2 flex items-center justify-between text-xs text-gray-600"
       >
-        <div class="text-2xl font-bold text-primary">ESMAD Repository</div>
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-primary"></span>
+            Catálogo de Projetos
+          </span>
+          <span class="hidden sm:inline text-gray-300">|</span>
+          <span class="hidden sm:inline">ESMAD · Politécnico do Porto</span>
+        </div>
+        <div class="hidden sm:flex items-center gap-4">
+          <a href="index.html" class="hover:text-gray-900">Início</a>
+          <a href="projects.html" class="hover:text-gray-900 font-semibold"
+            >Projetos</a
+          >
+        </div>
+      </div>
+    </div>
 
+    <!-- Navbar -->
+    <header
+      class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100"
+    >
+      <nav
+        class="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between"
+      >
+        <!-- Brand -->
+        <a href="index.html" class="flex items-center gap-3">
+          <div
+            class="h-10 w-10 rounded-xl bg-primary/10 ring-soft flex items-center justify-center"
+            aria-hidden="true"
+          >
+            <div class="h-5 w-5 rounded-md bg-primary"></div>
+          </div>
+          <div class="leading-tight">
+            <div class="text-sm font-semibold tracking-wide text-gray-900">
+              ESMAD Academic Repository
+            </div>
+            <div class="text-xs text-gray-500">
+              Explorar · Pesquisar · Consultar
+            </div>
+          </div>
+        </a>
+
+        <!-- Actions -->
         <div class="flex items-center gap-3">
           <button
             id="createProjectBtn"
-            class="bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 transition"
+            class="hidden sm:inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
+            type="button"
           >
             Criar novo projeto
           </button>
 
           <button
             id="logoutBtn"
-            class="bg-secondary text-gray-900 px-4 py-2 rounded-md hover:bg-gray-300 transition"
+            class="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition ring-soft"
+            type="button"
           >
             Logout
           </button>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
 
-    <p
-      id="userInfo"
-      class="max-w-7xl mx-auto px-4 pt-3 text-sm text-gray-600"
-    ></p>
-
-    <!-- Pesquisa -->
-    <section class="max-w-7xl mx-auto px-4 py-6">
-      <input
-        type="text"
-        id="searchInput"
-        class="w-full md:w-1/2 border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        placeholder="Pesquisar projetos..."
-      />
-      <p class="mt-2 text-xs text-gray-500" id="hint">
-        Dica: os filtros de Curso/UC ficam disponíveis quando o backend tiver
-        endpoints para courses/ucs.
-      </p>
-    </section>
-
-    <!-- Tipos de curso (opcional / não bloqueia) -->
-    <section class="max-w-7xl mx-auto px-4 pb-2">
-      <h2 class="text-2xl font-bold text-gray-900 mb-4">Tipos de Curso</h2>
-
-      <div class="flex flex-wrap gap-4 mb-6">
-        <button
-          class="course-btn bg-secondary px-4 py-2 rounded-lg text-gray-900 hover:bg-gray-300 transition"
-          data-course="CTESP"
-        >
-          CTESP
-        </button>
-        <button
-          class="course-btn bg-secondary px-4 py-2 rounded-lg text-gray-900 hover:bg-gray-300 transition"
-          data-course="Licenciatura"
-        >
-          Licenciatura
-        </button>
-        <button
-          class="course-btn bg-secondary px-4 py-2 rounded-lg text-gray-900 hover:bg-gray-300 transition"
-          data-course="Mestrado"
-        >
-          Mestrado
-        </button>
-        <button
-          class="course-btn bg-secondary px-4 py-2 rounded-lg text-gray-900 hover:bg-gray-300 transition"
-          data-course="Pos-Graduação"
-        >
-          Pós-Graduação
-        </button>
-      </div>
-
-      <!-- Filtros (só ativam se courses/ucs existirem) -->
-      <div id="filters" class="flex flex-wrap gap-4 mb-6 hidden">
-        <select
-          id="yearFilter"
-          class="border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="">Todos os anos</option>
-          <option value="1">1º Ano</option>
-          <option value="2">2º Ano</option>
-          <option value="3">3º Ano</option>
-          <option value="4">4º Ano</option>
-        </select>
-
-        <select
-          id="ucFilter"
-          class="border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="">Todas as UCs</option>
-        </select>
-
-        <button
-          id="clearFiltersBtn"
-          class="bg-white border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition"
-          type="button"
-        >
-          Limpar filtros
-        </button>
-      </div>
-
-      <p id="filtersStatus" class="text-xs text-gray-500 mb-6 hidden"></p>
-    </section>
-
-    <!-- Projetos -->
-    <section class="max-w-7xl mx-auto px-4 pb-10">
-      <div class="flex items-center justify-between gap-4 flex-wrap mb-4">
-        <h2 class="text-2xl font-bold text-gray-900">Projetos</h2>
-        <p id="resultsInfo" class="text-sm text-gray-600"></p>
-      </div>
-
+    <!-- User info -->
+    <div class="mx-auto max-w-7xl px-4 pt-4">
       <div
-        id="projectsList"
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
-      ></div>
-    </section>
+        class="rounded-2xl border border-gray-100 bg-gray-50 p-4 ring-soft flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+      >
+        <p id="userInfo" class="text-sm text-gray-700"></p>
+        <p class="text-xs text-gray-500">
+          Consulta pública disponível. Para interagir/submeter, é necessário
+          autenticação.
+        </p>
+      </div>
+    </div>
 
+    <!-- Layout -->
+    <main class="mx-auto max-w-7xl px-4 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Sidebar -->
+        <aside class="lg:col-span-4">
+          <div
+            class="rounded-2xl border border-gray-100 bg-white p-6 ring-soft"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <h2 class="text-sm font-semibold text-gray-900">Pesquisa</h2>
+                <p class="mt-1 text-sm text-gray-600">
+                  Encontra projetos por título, descrição e tags.
+                </p>
+              </div>
+              <div
+                class="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center"
+                aria-hidden="true"
+              >
+                <div class="h-3 w-3 rounded-sm bg-primary"></div>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <label
+                for="searchInput"
+                class="block text-xs font-semibold text-gray-700"
+                >Pesquisar</label
+              >
+              <div class="relative mt-2">
+                <input
+                  type="text"
+                  id="searchInput"
+                  class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  placeholder="Ex.: Web, Arduino, UX, API..."
+                />
+                <div
+                  class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"
+                >
+                  Enter
+                </div>
+              </div>
+
+              <p class="mt-2 text-xs text-gray-500" id="hint">
+                Dica: filtros de Curso/UC ativam quando o backend expuser
+                <span class="font-semibold">courses</span> /
+                <span class="font-semibold">ucs</span>.
+              </p>
+            </div>
+
+            <!-- Tipos de curso -->
+            <div class="mt-6 border-t border-gray-100 pt-5">
+              <h3 class="text-sm font-semibold text-gray-900">
+                Tipos de Curso
+              </h3>
+              <p class="mt-1 text-xs text-gray-500">
+                Seleciona uma tipologia para filtrar.
+              </p>
+
+              <div class="mt-4 grid grid-cols-2 gap-3">
+                <button
+                  class="course-btn rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition ring-soft"
+                  data-course="CTESP"
+                  type="button"
+                >
+                  CTeSP
+                </button>
+                <button
+                  class="course-btn rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition ring-soft"
+                  data-course="Licenciatura"
+                  type="button"
+                >
+                  Licenciatura
+                </button>
+                <button
+                  class="course-btn rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition ring-soft"
+                  data-course="Mestrado"
+                  type="button"
+                >
+                  Mestrado
+                </button>
+                <button
+                  class="course-btn rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition ring-soft"
+                  data-course="Pos-Graduação"
+                  type="button"
+                >
+                  Pós-Grad.
+                </button>
+              </div>
+
+              <!-- Filtros avançados -->
+              <div id="filters" class="mt-5 hidden">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      for="yearFilter"
+                      class="block text-xs font-semibold text-gray-700"
+                      >Ano</label
+                    >
+                    <select
+                      id="yearFilter"
+                      class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value="">Todos os anos</option>
+                      <option value="1">1º Ano</option>
+                      <option value="2">2º Ano</option>
+                      <option value="3">3º Ano</option>
+                      <option value="4">4º Ano</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      for="ucFilter"
+                      class="block text-xs font-semibold text-gray-700"
+                      >Unidade Curricular</label
+                    >
+                    <select
+                      id="ucFilter"
+                      class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value="">Todas as UCs</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  id="clearFiltersBtn"
+                  class="mt-4 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                  type="button"
+                >
+                  Limpar filtros
+                </button>
+              </div>
+
+              <p
+                id="filtersStatus"
+                class="mt-4 text-xs text-gray-500 hidden"
+              ></p>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Content -->
+        <section class="lg:col-span-8">
+          <div class="flex items-start justify-between gap-6 flex-wrap">
+            <div>
+              <h1 class="text-2xl md:text-3xl font-semibold text-gray-900">
+                Projetos
+              </h1>
+              <p class="mt-2 text-sm text-gray-600">
+                Resultados disponíveis no catálogo institucional.
+              </p>
+            </div>
+
+            <div
+              class="rounded-xl border border-gray-100 bg-white px-4 py-3 ring-soft"
+            >
+              <p id="resultsInfo" class="text-sm text-gray-700"></p>
+              <p id="activeFilters" class="text-xs text-gray-500 mt-1"></p>
+            </div>
+          </div>
+
+          <!-- List -->
+          <div class="mt-6">
+            <div
+              id="projectsList"
+              class="grid grid-cols-1 sm:grid-cols-2 gap-5"
+            ></div>
+          </div>
+
+          <!-- Footer note -->
+          <div class="mt-8 text-xs text-gray-500">
+            Sugestão: abre um projeto para ver anexos e detalhes (login pode ser
+            necessário).
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Script -->
     <script>
       // ===== CONFIG =====
       const GRAPHQL_URL = "http://localhost:3000/graphql";
@@ -153,26 +314,36 @@
       const logoutBtn = document.getElementById("logoutBtn");
       const createBtn = document.getElementById("createProjectBtn");
 
-      if (user && user.name) userInfo.textContent = `Olá, ${user.name}`;
-      else userInfo.textContent = token ? "Sessão ativa." : "Sem sessão.";
+      if (user && user.name)
+        userInfo.textContent = `Sessão ativa: ${user.name}`;
+      else
+        userInfo.textContent = token
+          ? "Sessão ativa."
+          : "Sem sessão (consulta pública).";
 
+      // Logout/Login
       logoutBtn.addEventListener("click", () => {
+        if (!token) {
+          window.location.href = "login.html";
+          return;
+        }
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         window.location.href = "login.html";
       });
 
-      // Se não tiver token, escondemos criar + logout e não bloqueamos a página.
+      // Se não tiver token: esconde "criar", transforma botão em "Login"
       if (!token) {
         createBtn.classList.add("hidden");
         logoutBtn.textContent = "Login";
-        logoutBtn.classList.remove("bg-secondary");
-        logoutBtn.classList.add("bg-primary", "text-white");
-        logoutBtn.addEventListener(
-          "click",
-          () => (window.location.href = "login.html"),
+        logoutBtn.classList.remove(
+          "text-gray-700",
+          "ring-soft",
+          "hover:bg-gray-50",
         );
+        logoutBtn.classList.add("bg-primary", "text-white", "hover:opacity-90");
       } else {
+        createBtn.classList.remove("hidden");
         createBtn.addEventListener(
           "click",
           () => (window.location.href = "upload.html"),
@@ -182,6 +353,7 @@
       // ===== DOM =====
       const projectsList = document.getElementById("projectsList");
       const resultsInfo = document.getElementById("resultsInfo");
+      const activeFilters = document.getElementById("activeFilters");
       const searchInput = document.getElementById("searchInput");
       const courseBtns = document.querySelectorAll(".course-btn");
       const filtersDiv = document.getElementById("filters");
@@ -220,7 +392,6 @@
           throw new Error(`Backend não devolveu JSON (HTTP ${res.status})`);
         }
 
-        // ✅ trata HTTP 400/500
         if (!res.ok) {
           console.error("HTTP error:", res.status, json);
           const msg =
@@ -240,20 +411,6 @@
         return json.data;
       }
 
-      function setLoading(message = "A carregar...") {
-        projectsList.innerHTML = `<p class="text-gray-500 col-span-full">${escapeHtml(message)}</p>`;
-      }
-
-      function setError(message) {
-        projectsList.innerHTML = `
-          <div class="col-span-full border border-red-200 bg-red-50 rounded-lg p-4">
-            <p class="text-red-700 font-semibold">Erro</p>
-            <p class="text-red-700 text-sm mt-1">${escapeHtml(message)}</p>
-            <p class="text-red-700 text-xs mt-2">Abre a consola (F12) para ver detalhes.</p>
-          </div>
-        `;
-      }
-
       function escapeHtml(str) {
         return String(str)
           .replaceAll("&", "&amp;")
@@ -263,38 +420,122 @@
           .replaceAll("'", "&#039;");
       }
 
-      function renderProjects(items, total) {
-        projectsList.innerHTML = "";
+      function setLoading(message = "A carregar...") {
+        projectsList.innerHTML = `
+          <div class="col-span-full rounded-2xl border border-gray-100 bg-white p-6 ring-soft">
+            <div class="animate-pulse space-y-3">
+              <div class="h-4 w-1/3 rounded bg-gray-100"></div>
+              <div class="h-3 w-full rounded bg-gray-100"></div>
+              <div class="h-3 w-5/6 rounded bg-gray-100"></div>
+              <div class="h-8 w-28 rounded bg-gray-100"></div>
+            </div>
+            <p class="mt-4 text-sm text-gray-600">${escapeHtml(message)}</p>
+          </div>
+        `;
+      }
+
+      function setError(message) {
+        projectsList.innerHTML = `
+          <div class="col-span-full rounded-2xl border border-red-200 bg-red-50 p-6">
+            <p class="text-red-800 font-semibold">Erro ao carregar</p>
+            <p class="text-red-700 text-sm mt-1">${escapeHtml(message)}</p>
+            <p class="text-red-700 text-xs mt-3">Abre a consola (F12) para detalhes.</p>
+          </div>
+        `;
+      }
+
+      function badge(text) {
+        return `<span class="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700">${escapeHtml(
+          text,
+        )}</span>`;
+      }
+
+      function renderActiveFilters(total) {
+        const parts = [];
+        if (searchTerm.trim()) parts.push(`Pesquisa: "${searchTerm.trim()}"`);
+        if (selectedCourseType) parts.push(`Tipo: ${selectedCourseType}`);
+        if (selectedYear) parts.push(`Ano: ${selectedYear}`);
+        if (selectedUcId) parts.push(`UC: selecionada`);
+        activeFilters.textContent = parts.length
+          ? parts.join(" · ")
+          : "Sem filtros ativos";
+
         resultsInfo.textContent =
           typeof total === "number" ? `${total} resultado(s)` : "";
+      }
+
+      function renderProjects(items, total) {
+        projectsList.innerHTML = "";
+        renderActiveFilters(total);
 
         if (!items || items.length === 0) {
-          projectsList.innerHTML = `<p class="text-gray-500 col-span-full">Nenhum projeto encontrado.</p>`;
+          projectsList.innerHTML = `
+            <div class="col-span-full rounded-2xl border border-gray-100 bg-white p-8 ring-soft">
+              <p class="text-gray-900 font-semibold">Nenhum projeto encontrado</p>
+              <p class="mt-1 text-sm text-gray-600">
+                Tenta ajustar a pesquisa ou remover filtros.
+              </p>
+              <button id="emptyClearBtn" class="mt-4 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition" type="button">
+                Limpar filtros
+              </button>
+            </div>
+          `;
+          document
+            .getElementById("emptyClearBtn")
+            ?.addEventListener("click", () => {
+              clearFiltersBtn.click();
+              searchInput.value = "";
+              searchTerm = "";
+              loadProjects().catch((err) => setError(err.message));
+            });
           return;
         }
 
         items.forEach((p) => {
-          const card = document.createElement("div");
+          const card = document.createElement("article");
           card.className =
-            "bg-secondary p-4 rounded-lg shadow-md hover:shadow-xl transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary";
+            "rounded-2xl border border-gray-100 bg-white p-6 ring-soft hover:shadow-sm hover:border-gray-200 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20";
           card.setAttribute("tabindex", "0");
 
-          const tags = (p.tags || [])
-            .slice(0, 6)
-            .map((t) => `#${t}`)
-            .join(" ");
+          const created = p.createdAt
+            ? new Date(p.createdAt).toLocaleDateString("pt-PT")
+            : "-";
+
+          const tags = (p.tags || []).slice(0, 6);
 
           card.innerHTML = `
-            <h3 class="text-lg font-bold text-primary mb-2">${escapeHtml(p.title)}</h3>
-            <p class="text-sm text-gray-700 line-clamp-3 min-h-[3.5rem]">${escapeHtml(p.description || "")}</p>
-            <div class="mt-3 text-xs text-gray-700">
-              <p><span class="font-semibold">ID:</span> ${escapeHtml(p.id)}</p>
-              <p><span class="font-semibold">Criado:</span> ${
-                p.createdAt
-                  ? new Date(p.createdAt).toLocaleDateString("pt-PT")
-                  : "-"
-              }</p>
-              ${tags ? `<p class="mt-2">${escapeHtml(tags)}</p>` : ""}
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <h3 class="text-base md:text-lg font-semibold text-gray-900 lc-2">
+                  ${escapeHtml(p.title || "Sem título")}
+                </h3>
+                <p class="mt-2 text-sm text-gray-600 lc-3">
+                  ${escapeHtml(p.description || "Sem descrição.")}
+                </p>
+              </div>
+
+              <div class="shrink-0 h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center" aria-hidden="true">
+                <div class="h-3 w-3 rounded-sm bg-primary"></div>
+              </div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+              ${badge(`ID: ${p.id}`)}
+              ${badge(`Criado: ${created}`)}
+              ${Array.isArray(p.ucIds) && p.ucIds.length ? badge(`UCs: ${p.ucIds.length}`) : ""}
+            </div>
+
+            ${
+              tags.length
+                ? `<div class="mt-4 flex flex-wrap gap-2">
+                     ${tags.map((t) => badge("#" + t)).join("")}
+                   </div>`
+                : ""
+            }
+
+            <div class="mt-5 flex items-center justify-between">
+              <span class="text-xs text-gray-500">Abrir detalhes</span>
+              <span class="text-sm font-semibold text-primary">Ver →</span>
             </div>
           `;
 
@@ -325,7 +566,7 @@
           latestCoursesCache = data?.courses || [];
           backendHasCourses = true;
           return true;
-        } catch (e) {
+        } catch {
           backendHasCourses = false;
           return false;
         }
@@ -376,6 +617,7 @@
 
       function updateFiltersUI() {
         if (backendHasCourses) {
+          filtersDiv.classList.add("hidden"); // só aparece depois de selecionar tipo
           filtersStatus.classList.add("hidden");
         } else {
           filtersDiv.classList.add("hidden");
@@ -383,6 +625,14 @@
           filtersStatus.textContent =
             "Filtros de Curso/UC indisponíveis (o backend ainda não tem courses/ucs).";
         }
+      }
+
+      function highlightCourse(btn) {
+        courseBtns.forEach((b) => {
+          b.classList.remove("ring-2", "ring-primary");
+          b.classList.add("ring-soft");
+        });
+        btn.classList.add("ring-2", "ring-primary");
       }
 
       // ===== PROJECTS =====
@@ -415,13 +665,30 @@
           `,
           { filters, page: { limit: 50, offset: 0 } },
         );
+
         if (!data?.projects)
           throw new Error("Resposta inválida do backend: falta 'projects'");
+
         renderProjects(data.projects.items, data.projects.total);
       }
 
       // ===== EVENTS =====
       let searchDebounce;
+
+      // Suporte a ?q= e ?type= (vindo do index)
+      function readQueryParams() {
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get("q");
+        const type = params.get("type");
+        if (q) {
+          searchTerm = q;
+          searchInput.value = q;
+        }
+        if (type) {
+          selectedCourseType = type;
+        }
+      }
+
       searchInput.addEventListener("input", (e) => {
         searchTerm = e.target.value;
         clearTimeout(searchDebounce);
@@ -430,26 +697,22 @@
         }, 250);
       });
 
+      searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          loadProjects().catch((err) => setError(err.message));
+        }
+      });
+
       courseBtns.forEach((btn) => {
         btn.addEventListener("click", async () => {
-          if (!backendHasCourses) {
-            // só faz highlight visual, mas não tenta filtros
-            courseBtns.forEach((b) =>
-              b.classList.remove("ring-2", "ring-primary"),
-            );
-            btn.classList.add("ring-2", "ring-primary");
-            return;
-          }
+          highlightCourse(btn);
+
+          if (!backendHasCourses) return;
 
           selectedCourseType = btn.dataset.course;
-          courseBtns.forEach((b) =>
-            b.classList.remove("ring-2", "ring-primary"),
-          );
-          btn.classList.add("ring-2", "ring-primary");
-
           filtersDiv.classList.remove("hidden");
-          selectedCourseId = pickCourseIdByType(selectedCourseType);
 
+          selectedCourseId = pickCourseIdByType(selectedCourseType);
           await loadUcsForFiltersIfExists();
           await loadProjects();
         });
@@ -483,8 +746,23 @@
       // ===== INIT =====
       (async function init() {
         try {
+          readQueryParams();
           await loadCoursesIfExists();
           updateFiltersUI();
+
+          // Se vier type do URL e o backend suportar, ativa logo
+          if (selectedCourseType && backendHasCourses) {
+            const btn = [...courseBtns].find(
+              (b) => b.dataset.course === selectedCourseType,
+            );
+            if (btn) {
+              highlightCourse(btn);
+              filtersDiv.classList.remove("hidden");
+              selectedCourseId = pickCourseIdByType(selectedCourseType);
+              await loadUcsForFiltersIfExists();
+            }
+          }
+
           await loadProjects();
         } catch (err) {
           console.error(err);

@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ESMAD Academic Repository</title>
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      // Configura as cores personalizadas
       tailwind.config = {
         theme: {
           extend: {
@@ -19,97 +19,522 @@
         },
       };
     </script>
+
+    <style>
+      /* Pequenos detalhes “institucionais” sem frameworks extra */
+      .ring-soft {
+        box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
+      }
+    </style>
   </head>
 
-  <body class="bg-white font-sans text-gray-800">
-    <!-- Navbar -->
-    <nav class="bg-white shadow-md">
+  <body class="bg-white font-sans text-gray-900">
+    <!-- Top bar (institucional) -->
+    <div class="border-b border-gray-100">
       <div
-        class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center"
+        class="mx-auto max-w-7xl px-4 py-2 flex items-center justify-between text-xs text-gray-600"
       >
-        <div class="text-2xl font-bold text-primary">ESMAD Repository</div>
-        <div>
-          <a href="login.html"
-            ><button
-              id="loginBtn"
-              class="bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 transition"
-            >
-              Login
-            </button></a
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-primary"></span>
+            Repositório Académico
+          </span>
+          <span class="hidden sm:inline text-gray-300">|</span>
+          <span class="hidden sm:inline">ESMAD · Politécnico do Porto</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button
+            id="themeBtn"
+            class="rounded-md px-2 py-1 hover:bg-gray-50 transition"
+            type="button"
+            aria-label="Alternar modo de contraste"
+            title="Alternar modo de contraste"
+          >
+            Contraste
+          </button>
+          <a
+            href="login.html"
+            class="rounded-md px-2 py-1 hover:bg-gray-50 transition"
+            >Acesso</a
           >
         </div>
       </div>
-    </nav>
+    </div>
 
-    <!-- Hero Section -->
-    <section class="max-w-7xl mx-auto px-4 py-20 text-center">
-      <h1 class="text-4xl md:text-5xl font-extrabold text-primary mb-6">
-        Conecta-te com os melhores projetos académicos
-      </h1>
-      <p class="text-lg md:text-xl text-gray-600 mb-8">
-        Explora cursos, unidades curriculares e projetos desenvolvidos pelos
-        estudantes da ESMAD.
-      </p>
-      <a href="projects.html"
-        ><button
-          id="startBtn"
-          class="bg-primary text-white px-6 py-3 rounded-lg text-lg hover:opacity-90 transition"
-        >
-          Explorar Projetos
-        </button></a
+    <!-- Header / Navbar -->
+    <header
+      class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100"
+    >
+      <nav
+        class="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between"
       >
-    </section>
+        <!-- Brand -->
+        <a href="index.html" class="flex items-center gap-3">
+          <div
+            class="h-10 w-10 rounded-xl bg-primary/10 ring-soft flex items-center justify-center"
+            aria-hidden="true"
+          >
+            <div class="h-5 w-5 rounded-md bg-primary"></div>
+          </div>
+          <div class="leading-tight">
+            <div class="text-sm font-semibold tracking-wide text-gray-900">
+              ESMAD Academic Repository
+            </div>
+            <div class="text-xs text-gray-500">
+              Projetos · Cursos · Unidades Curriculares
+            </div>
+          </div>
+        </a>
 
-    <!-- Features / Tipos de Curso -->
-    <section class="max-w-7xl mx-auto px-4 py-16">
-      <h2 class="text-3xl font-bold text-white mb-8 text-center">
-        Tipos de Curso
-      </h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        <div
-          class="bg-primary text-white p-6 rounded-lg shadow-md hover:shadow-xl transition cursor-pointer text-center"
-        >
-          <h3 class="text-xl font-semibold mb-2">CTESP</h3>
-          <p class="text-white">
-            Cursos técnicos de especialização profissional
-          </p>
+        <!-- Actions -->
+        <div class="flex items-center gap-3">
+          <a
+            href="projects.html"
+            class="hidden sm:inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition ring-soft"
+          >
+            Explorar
+          </a>
+
+          <a
+            href="login.html"
+            class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
+          >
+            Login
+          </a>
         </div>
-        <div
-          class="bg-primary text-white p-6 rounded-lg shadow-md hover:shadow-xl transition cursor-pointer text-center"
-        >
-          <h3 class="text-xl font-semibold mb-2">Licenciatura</h3>
-          <p class="text-white">
-            Cursos de graduação com duração típica de 3 anos
-          </p>
+      </nav>
+    </header>
+
+    <!-- Hero -->
+    <main>
+      <section class="relative">
+        <!-- Subtle background -->
+        <div class="absolute inset-0 -z-10">
+          <div
+            class="h-full w-full bg-gradient-to-b from-gray-50 to-white"
+          ></div>
+          <div class="mx-auto max-w-7xl px-4" aria-hidden="true">
+            <div
+              class="mt-10 h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent"
+            ></div>
+          </div>
         </div>
-        <div
-          class="bg-primary text-white p-6 rounded-lg shadow-md hover:shadow-xl transition cursor-pointer text-center"
-        >
-          <h3 class="text-xl font-semibold mb-2">Mestrado</h3>
-          <p class="text-white">Cursos avançados de 2 anos após licenciatura</p>
+
+        <div class="mx-auto max-w-7xl px-4 py-14 md:py-20">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <!-- Copy -->
+            <div class="lg:col-span-7">
+              <div
+                class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary ring-soft"
+              >
+                <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                Plataforma institucional de consulta
+              </div>
+
+              <h1
+                class="mt-5 text-4xl md:text-5xl font-semibold tracking-tight text-gray-900"
+              >
+                Repositório Académico da ESMAD
+              </h1>
+
+              <p class="mt-4 text-base md:text-lg text-gray-600 max-w-2xl">
+                Explora projetos, cursos e unidades curriculares com organização
+                clara, pesquisa rápida e acesso controlado para interação e
+                submissões.
+              </p>
+
+              <!-- Search (UI) -->
+              <div class="mt-8">
+                <label
+                  for="q"
+                  class="block text-sm font-semibold text-gray-800"
+                >
+                  Pesquisa rápida
+                </label>
+                <div class="mt-2 flex flex-col sm:flex-row gap-3">
+                  <div class="flex-1">
+                    <div class="relative">
+                      <input
+                        id="q"
+                        type="text"
+                        placeholder="Ex.: Programação Web, Sistemas Computacionais, UX..."
+                        class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      />
+                      <div
+                        class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"
+                      >
+                        Enter
+                      </div>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">
+                      Dica: pesquisa por curso, UC, ano, tecnologia ou
+                      palavra-chave.
+                    </p>
+                  </div>
+
+                  <div class="flex gap-3">
+                    <a
+                      id="searchBtn"
+                      href="projects.html"
+                      class="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:opacity-90 transition"
+                    >
+                      Pesquisar
+                    </a>
+
+                    <a
+                      href="projects.html"
+                      class="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition ring-soft"
+                    >
+                      Ver catálogo
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Trust / meta -->
+              <div
+                class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl"
+              >
+                <div class="rounded-xl border border-gray-100 p-4">
+                  <div class="text-xs text-gray-500">Organização</div>
+                  <div class="mt-1 text-sm font-semibold text-gray-900">
+                    Cursos & UCs
+                  </div>
+                </div>
+                <div class="rounded-xl border border-gray-100 p-4">
+                  <div class="text-xs text-gray-500">Conteúdo</div>
+                  <div class="mt-1 text-sm font-semibold text-gray-900">
+                    Projetos académicos
+                  </div>
+                </div>
+                <div class="rounded-xl border border-gray-100 p-4">
+                  <div class="text-xs text-gray-500">Acesso</div>
+                  <div class="mt-1 text-sm font-semibold text-gray-900">
+                    Consulta pública
+                  </div>
+                </div>
+                <div class="rounded-xl border border-gray-100 p-4">
+                  <div class="text-xs text-gray-500">Interação</div>
+                  <div class="mt-1 text-sm font-semibold text-gray-900">
+                    Login obrigatório
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Side panel (serious card) -->
+            <aside class="lg:col-span-5">
+              <div
+                class="rounded-2xl border border-gray-100 bg-white p-6 ring-soft"
+              >
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 class="text-sm font-semibold text-gray-900">
+                      Acesso e permissões
+                    </h2>
+                    <p class="mt-1 text-sm text-gray-600">
+                      A consulta é pública. Para abrir detalhes, submeter ou
+                      interagir com projetos, é necessário autenticação.
+                    </p>
+                  </div>
+                  <div
+                    class="h-10 w-10 rounded-xl bg-secondary/20 flex items-center justify-center text-gray-700 font-semibold"
+                  >
+                    i
+                  </div>
+                </div>
+
+                <div class="mt-6 space-y-3">
+                  <div class="rounded-xl bg-gray-50 p-4 border border-gray-100">
+                    <div class="text-xs text-gray-500">Sem login</div>
+                    <div class="mt-1 text-sm font-semibold text-gray-900">
+                      Explorar listagens e filtros
+                    </div>
+                  </div>
+
+                  <div class="rounded-xl bg-gray-50 p-4 border border-gray-100">
+                    <div class="text-xs text-gray-500">Com login</div>
+                    <div class="mt-1 text-sm font-semibold text-gray-900">
+                      Aceder a detalhes, anexos e submissões
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-6 flex flex-col sm:flex-row gap-3">
+                  <a
+                    href="login.html"
+                    class="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition w-full"
+                  >
+                    Entrar
+                  </a>
+                  <a
+                    href="projects.html"
+                    class="inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition ring-soft w-full"
+                  >
+                    Explorar sem login
+                  </a>
+                </div>
+
+                <div
+                  class="mt-6 border-t border-gray-100 pt-4 text-xs text-gray-500"
+                >
+                  <span class="font-semibold text-gray-700">Nota:</span>
+                  Esta página é o ponto de entrada institucional. O catálogo
+                  completo está em
+                  <span class="font-semibold text-gray-700">projects.html</span
+                  >.
+                </div>
+              </div>
+            </aside>
+          </div>
         </div>
-        <div
-          class="bg-primary text-white p-6 rounded-lg shadow-md hover:shadow-xl transition cursor-pointer text-center"
-        >
-          <h3 class="text-xl font-semibold mb-2">Pós-Graduação</h3>
-          <p class="text-white">
-            Cursos especializados e certificados de curta duração
-          </p>
+      </section>
+
+      <!-- Tipos de curso (mais institucional, sem blocos “agressivos”) -->
+      <section class="mx-auto max-w-7xl px-4 py-14">
+        <div class="flex items-end justify-between gap-6">
+          <div>
+            <h2 class="text-2xl md:text-3xl font-semibold text-gray-900">
+              Tipos de Curso
+            </h2>
+            <p class="mt-2 text-gray-600 max-w-2xl">
+              Navegação estruturada por tipologia, com acesso a cursos, anos e
+              unidades curriculares.
+            </p>
+          </div>
+
+          <a
+            href="projects.html"
+            class="hidden sm:inline text-sm font-semibold text-primary hover:opacity-80"
+          >
+            Abrir catálogo →
+          </a>
         </div>
-      </div>
-    </section>
+
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <!-- Card -->
+          <button
+            data-type="ctesp"
+            class="courseCard text-left rounded-2xl border border-gray-100 bg-white p-6 ring-soft hover:border-gray-200 hover:shadow-sm transition"
+            type="button"
+          >
+            <div class="flex items-center justify-between">
+              <div class="text-sm font-semibold text-gray-900">CTeSP</div>
+              <div
+                class="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center"
+              >
+                <div class="h-3 w-3 rounded-sm bg-primary"></div>
+              </div>
+            </div>
+            <p class="mt-3 text-sm text-gray-600">
+              Cursos técnicos superiores profissionais orientados para prática e
+              especialização.
+            </p>
+            <div class="mt-4 text-xs font-semibold text-gray-500">
+              Ver cursos →
+            </div>
+          </button>
+
+          <button
+            data-type="licenciatura"
+            class="courseCard text-left rounded-2xl border border-gray-100 bg-white p-6 ring-soft hover:border-gray-200 hover:shadow-sm transition"
+            type="button"
+          >
+            <div class="flex items-center justify-between">
+              <div class="text-sm font-semibold text-gray-900">
+                Licenciatura
+              </div>
+              <div
+                class="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center"
+              >
+                <div class="h-3 w-3 rounded-sm bg-primary"></div>
+              </div>
+            </div>
+            <p class="mt-3 text-sm text-gray-600">
+              Formação de base com estrutura por anos e unidades curriculares.
+            </p>
+            <div class="mt-4 text-xs font-semibold text-gray-500">
+              Ver cursos →
+            </div>
+          </button>
+
+          <button
+            data-type="mestrado"
+            class="courseCard text-left rounded-2xl border border-gray-100 bg-white p-6 ring-soft hover:border-gray-200 hover:shadow-sm transition"
+            type="button"
+          >
+            <div class="flex items-center justify-between">
+              <div class="text-sm font-semibold text-gray-900">Mestrado</div>
+              <div
+                class="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center"
+              >
+                <div class="h-3 w-3 rounded-sm bg-primary"></div>
+              </div>
+            </div>
+            <p class="mt-3 text-sm text-gray-600">
+              Especialização avançada e projetos com maior profundidade técnica.
+            </p>
+            <div class="mt-4 text-xs font-semibold text-gray-500">
+              Ver cursos →
+            </div>
+          </button>
+
+          <button
+            data-type="pos"
+            class="courseCard text-left rounded-2xl border border-gray-100 bg-white p-6 ring-soft hover:border-gray-200 hover:shadow-sm transition"
+            type="button"
+          >
+            <div class="flex items-center justify-between">
+              <div class="text-sm font-semibold text-gray-900">
+                Pós-Graduação
+              </div>
+              <div
+                class="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center"
+              >
+                <div class="h-3 w-3 rounded-sm bg-primary"></div>
+              </div>
+            </div>
+            <p class="mt-3 text-sm text-gray-600">
+              Percursos de curta/média duração focados em áreas específicas.
+            </p>
+            <div class="mt-4 text-xs font-semibold text-gray-500">
+              Ver cursos →
+            </div>
+          </button>
+        </div>
+      </section>
+
+      <!-- Callout (institucional) -->
+      <section class="mx-auto max-w-7xl px-4 pb-16">
+        <div
+          class="rounded-2xl border border-gray-100 bg-gray-50 p-8 ring-soft"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            <div class="md:col-span-8">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Pronto para consultar projetos por curso, ano e UC?
+              </h3>
+              <p class="mt-2 text-sm text-gray-600">
+                Acede ao catálogo e utiliza filtros para encontrar rapidamente
+                os projetos relevantes.
+              </p>
+            </div>
+            <div class="md:col-span-4 flex gap-3 md:justify-end">
+              <a
+                href="projects.html"
+                class="inline-flex w-full md:w-auto items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:opacity-90 transition"
+              >
+                Abrir projects.html
+              </a>
+              <a
+                href="login.html"
+                class="inline-flex w-full md:w-auto items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-white transition ring-soft"
+              >
+                Login
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
 
     <!-- Footer -->
-    <footer class="bg-white shadow-inner mt-20">
-      <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-500">
-        &copy; 2026 ESMAD Academic Repository. Todos os direitos reservados.
+    <footer class="border-t border-gray-100">
+      <div class="mx-auto max-w-7xl px-4 py-8">
+        <div
+          class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+        >
+          <div>
+            <div class="text-sm font-semibold text-gray-900">
+              ESMAD Academic Repository
+            </div>
+            <div class="mt-1 text-xs text-gray-500">
+              &copy; <span id="year"></span> · Plataforma académica
+              institucional.
+            </div>
+          </div>
+
+          <div
+            class="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-gray-600"
+          >
+            <a href="projects.html" class="hover:text-gray-900">Catálogo</a>
+            <a href="login.html" class="hover:text-gray-900">Login</a>
+            <a href="#" class="hover:text-gray-900">Contacto</a>
+            <span class="text-gray-300">|</span>
+            <span class="text-gray-500">ESMAD · Politécnico do Porto</span>
+          </div>
+        </div>
       </div>
     </footer>
 
-    <!-- Script -->
+    <!-- JS (mínimo e útil) -->
     <script>
-      const loginBtn = document.getElementById("loginBtn");
-      const startBtn = document.getElementById("startBtn");
+      // Ano automático
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      // Pesquisa: envia para projects.html com querystring ?q=
+      const q = document.getElementById("q");
+      const searchBtn = document.getElementById("searchBtn");
+
+      function goSearch() {
+        const value = (q.value || "").trim();
+        const url = value
+          ? `projects.html?q=${encodeURIComponent(value)}`
+          : "projects.html";
+        window.location.href = url;
+      }
+
+      q.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") goSearch();
+      });
+
+      searchBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        goSearch();
+      });
+
+      // Cards de tipos de curso: envia um filtro tipo=...
+      document.querySelectorAll(".courseCard").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const type = btn.getAttribute("data-type");
+          window.location.href = `projects.html?type=${encodeURIComponent(type)}`;
+        });
+      });
+
+      // Botão "Contraste" (modo simples: aumenta contraste/legibilidade)
+      const themeBtn = document.getElementById("themeBtn");
+      let highContrast = false;
+
+      themeBtn.addEventListener("click", () => {
+        highContrast = !highContrast;
+
+        document.body.classList.toggle("bg-white", !highContrast);
+        document.body.classList.toggle("bg-gray-950", highContrast);
+        document.body.classList.toggle("text-gray-900", !highContrast);
+        document.body.classList.toggle("text-white", highContrast);
+
+        document
+          .querySelectorAll("a, p, div, span, h1, h2, h3, label")
+          .forEach((el) => {
+            // Não é perfeito, mas dá um boost rápido de legibilidade sem reescrever CSS
+            if (highContrast) {
+              if (el.classList.contains("text-gray-600")) {
+                el.classList.remove("text-gray-600");
+                el.classList.add("text-gray-200");
+              }
+              if (el.classList.contains("text-gray-500")) {
+                el.classList.remove("text-gray-500");
+                el.classList.add("text-gray-300");
+              }
+            } else {
+              // Recarregar é a forma mais limpa de repor classes sem tracking complexo
+              // (mantém simples para já)
+            }
+          });
+
+        if (!highContrast) window.location.reload();
+      });
     </script>
   </body>
 </html>

@@ -20,8 +20,8 @@ class FilePublic(BaseModel):
     id: UUID
     owner_user_id: str
 
-    # ✅ tens UUID reais na BD
-    project_id: Optional[UUID] = None
+    # 🔧 project_id é INTEGER (alinhado com projects.id)
+    project_id: Optional[int] = None
 
     original_name: str
     content_type: str
@@ -36,8 +36,8 @@ class FileDownloadResponse(BaseModel):
 
 
 class FileAttachRequest(BaseModel):
-    # ✅ projectId é UUID (porque tens UUID reais)
-    projectId: UUID
+    # 🔧 projectId agora é INT
+    projectId: int
 
 
 class FileCompleteResponse(BaseModel):

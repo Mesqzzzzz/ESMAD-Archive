@@ -56,7 +56,7 @@ function pickDetail(val) {
 async function getProjectUcId(db, projectId) {
   const { rows } = await db.query(
     `SELECT uc_id FROM project_uc WHERE project_id = $1 LIMIT 1`,
-    [Number(projectId)],
+    [String(projectId)],
   );
   const ucId = rows?.[0]?.uc_id;
   return ucId != null ? [String(ucId)] : [];
@@ -87,13 +87,13 @@ async function getProjectTags(db, projectId) {
     WHERE pt.project_id = $1
     ORDER BY t.name
     `,
-    [Number(projectId)],
+    [String(projectId)],
   );
   return rows.map((r) => r.name);
 }
 
 async function setProjectTags(db, projectId, tags) {
-  const pid = Number(projectId);
+  const pid = String(projectId);
 
   await db.query(`DELETE FROM project_tags WHERE project_id = $1`, [pid]);
 
@@ -369,7 +369,7 @@ export const resolvers = {
         // 3) anexa ficheiro ao projeto (files.project_id)
         await axios.post(
           `${FILES_BASE}/files/${encodeURIComponent(fileId)}/attach`,
-          { projectId: Number(projectId) },
+          { projectId: String(projectId) },
           {
             headers: { Authorization: `Bearer ${ctx.token}` },
             timeout: 15000,
@@ -415,7 +415,7 @@ export const resolvers = {
         LEFT JOIN users u ON u.id = p.creator_user_id::int
         WHERE p.id = $1
         `,
-        [Number(projectId)],
+        [String(projectId)],
       );
 
       return mapProjectRow(finalRes.rows?.[0]);
@@ -458,7 +458,7 @@ export const resolvers = {
         try {
           await axios.post(
             `${FILES_BASE}/files/${encodeURIComponent(newFileId)}/attach`,
-            { projectId: Number(pid) },
+            { projectId: String(pid) },
             {
               headers: { Authorization: `Bearer ${ctx.token}` },
               timeout: 15000,

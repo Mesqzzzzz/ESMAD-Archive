@@ -18,7 +18,7 @@ from ..schemas import (
 from .. import models
 from ..s3 import presigned_put_url, presigned_get_url, delete_object
 from ..db import get_conn
-from ..mq import publish_file_uploaded  # ✅
+from ..mq import publish_file_uploaded
 
 router = APIRouter(prefix="/files", tags=["files"])
 
@@ -62,7 +62,7 @@ def init_upload(
     upload_url = presigned_put_url(object_key=object_key, content_type=body.contentType)
 
     return FileInitResponse(
-        fileId=str(row["id"]),
+        fileId=row["id"],
         objectKey=object_key,
         uploadUrl=upload_url,
         expiresInSeconds=settings.PRESIGNED_EXPIRES_SECONDS,
@@ -85,7 +85,6 @@ async def complete_upload(
     if not updated:
         raise HTTPException(status_code=404, detail="File not found")
 
-    # ✅ (Opcional) Evento técnico: ficheiro ficou READY (ainda sem projeto)
     try:
         await publish_file_uploaded(
             {
@@ -93,7 +92,7 @@ async def complete_upload(
                 "event": "file.ready",
                 "userId": str(user_id),
                 "fileId": str(updated["id"]),
-                "projectId": None,  # ainda não sabemos o projeto nesta fase
+                "projectId": None,
                 "objectKey": updated["object_key"],
                 "originalName": updated["original_name"],
                 "at": datetime.now(timezone.utc).isoformat(),
@@ -118,11 +117,15 @@ async def attach_to_project(
     if str(row["owner_user_id"]) != str(user_id):
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    updated = models.attach_file_to_project(file_id=file_id, project_id=str(body.projectId))
+    # 🔧 project_id é INT
+    updated = models.attach_file_to_project(
+        file_id=file_id,
+        project_id=body.projectId,
+    )
+
     if not updated:
         raise HTTPException(status_code=404, detail="File not found")
 
-    # ✅ EVENTO A: ficheiro pronto e ligado ao projeto
     try:
         await publish_file_uploaded(
             {
@@ -130,7 +133,7 @@ async def attach_to_project(
                 "event": "project.file.ready",
                 "userId": str(user_id),
                 "fileId": str(updated["id"]),
-                "projectId": str(body.projectId),  # ✅ UUID em string
+                "projectId": str(body.projectId),
                 "objectKey": updated["object_key"],
                 "originalName": updated["original_name"],
                 "at": datetime.now(timezone.utc).isoformat(),
@@ -161,7 +164,7 @@ def download(
 
 @router.get("/by-project/{project_id}")
 def get_by_project(
-    project_id: str,
+    project_id: int,
     user_id: str = Depends(get_current_user_id),
 ):
     with get_conn() as conn:

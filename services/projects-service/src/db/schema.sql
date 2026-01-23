@@ -64,10 +64,10 @@ CREATE TABLE IF NOT EXISTS courses (
   name TEXT NOT NULL
 );
 
+-- ✅ UCS sem coluna year
 CREATE TABLE IF NOT EXISTS ucs (
   id SERIAL PRIMARY KEY,
   course_id INT NOT NULL,
-  year INT NOT NULL,
   name TEXT NOT NULL,
   CONSTRAINT fk_ucs_course
     FOREIGN KEY(course_id) REFERENCES courses(id) ON DELETE CASCADE
@@ -87,4 +87,9 @@ CREATE TABLE IF NOT EXISTS project_uc (
 -- Índices
 -- =========================
 CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects(created_at);
-CREATE INDEX IF NOT EXISTS idx_ucs_course_year ON ucs(course_id, year);
+
+-- ✅ remover o índice antigo (caso exista nalguma BD)
+DROP INDEX IF EXISTS idx_ucs_course_year;
+
+-- ✅ novo índice sem year
+CREATE INDEX IF NOT EXISTS idx_ucs_course_name ON ucs(course_id, name);

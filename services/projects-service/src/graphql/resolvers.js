@@ -7,28 +7,77 @@ const FILES_BASE =
 function mapProjectRow(row) {
   if (!row) return null;
   return {
-    id: row.id, // ✅ number
+    id: row.id,
     title: row.title,
     description: row.description,
     repoUrl: row.repo_url,
     demoUrl: row.demo_url,
     coverImageUrl: row.cover_image_url,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    creatorUserId: row.creator_user_id,
+
+    // datas ISO
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
+    updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : null,
+
+    creatorUserId:
+      row.creator_user_id != null ? String(row.creator_user_id) : null,
     visibility: row.visibility,
     fileId: row.file_id ? String(row.file_id) : null,
+
+    // se vier do JOIN ao users
+    _creatorName: row.creator_name ?? null,
+    _creatorEmail: row.creator_email ?? null,
   };
 }
 
-async function getProjectUcIds(db, projectId) {
-  const { rows } = await db.query(
-    `SELECT uc_id FROM project_uc WHERE project_id = $1 ORDER BY uc_id`,
-    [Number(projectId)],
-  );
-  return rows.map((r) => String(r.uc_id));
+function mustAuth(ctx) {
+  const authedId = ctx?.user?.id != null ? String(ctx.user.id) : null;
+  if (!authedId || !ctx?.token) throw new Error("Not authenticated");
+  return authedId;
 }
 
+function pickDetail(val) {
+  if (val == null) return null;
+  if (typeof val === "string") return val;
+  if (typeof val === "object") {
+    if (typeof val.detail === "string") return val.detail;
+    if (typeof val.message === "string") return val.message;
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return String(val);
+    }
+  }
+  return String(val);
+}
+
+// =======================
+// UC 1:1 helpers
+// =======================
+async function getProjectUcId(db, projectId) {
+  const { rows } = await db.query(
+    `SELECT uc_id FROM project_uc WHERE project_id = $1 LIMIT 1`,
+    [Number(projectId)],
+  );
+  const ucId = rows?.[0]?.uc_id;
+  return ucId != null ? [String(ucId)] : [];
+}
+
+async function setProjectUcId(db, projectId, ucId) {
+  const pid = Number(projectId);
+
+  await db.query(`DELETE FROM project_uc WHERE project_id = $1`, [pid]);
+
+  if (ucId == null || String(ucId).trim() === "") return;
+
+  await db.query(
+    `INSERT INTO project_uc(project_id, uc_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+    [pid, Number(ucId)],
+  );
+}
+
+// =======================
+// Tags helpers (mantém)
+// =======================
 async function getProjectTags(db, projectId) {
   const { rows } = await db.query(
     `
@@ -41,18 +90,6 @@ async function getProjectTags(db, projectId) {
     [Number(projectId)],
   );
   return rows.map((r) => r.name);
-}
-
-async function setProjectUcIds(db, projectId, ucIds) {
-  const pid = Number(projectId);
-  await db.query(`DELETE FROM project_uc WHERE project_id = $1`, [pid]);
-
-  for (const ucId of ucIds) {
-    await db.query(
-      `INSERT INTO project_uc(project_id, uc_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-      [pid, Number(ucId)],
-    );
-  }
 }
 
 async function setProjectTags(db, projectId, tags) {
@@ -82,15 +119,68 @@ async function setProjectTags(db, projectId, tags) {
   }
 }
 
+// =======================
+// Validation 1:1 (ucId singular)
+// =======================
+function pickUcIdFromInput(input) {
+  const ucId = String(input?.ucId ?? "").trim();
+  if (!ucId) throw new Error("UC inválida");
+  return ucId;
+}
+
 export const resolvers = {
   Query: {
     health: () => "ok",
 
+    // courses
+    courses: async () => {
+      const db = getDb();
+      const { rows } = await db.query(
+        `SELECT id, type, name FROM courses ORDER BY type, name`,
+      );
+      return rows.map((r) => ({
+        id: String(r.id),
+        type: r.type,
+        name: r.name,
+      }));
+    },
+
+    ucs: async (_, { courseId, search }) => {
+      const db = getDb();
+
+      if (!courseId) return [];
+
+      const params = [Number(courseId)];
+      let sql = `SELECT id, course_id, name FROM ucs WHERE course_id = $1`;
+
+      if (search && String(search).trim()) {
+        params.push(`%${String(search).trim()}%`);
+        sql += ` AND name ILIKE $${params.length}`;
+      }
+
+      sql += ` ORDER BY name`;
+
+      const { rows } = await db.query(sql, params);
+      return rows.map((r) => ({
+        id: String(r.id),
+        courseId: String(r.course_id),
+        name: r.name,
+      }));
+    },
+
     project: async (_, { id }) => {
       const db = getDb();
-      const { rows } = await db.query(`SELECT * FROM projects WHERE id = $1`, [
-        Number(id),
-      ]);
+      const { rows } = await db.query(
+        `
+        SELECT p.*,
+               u.name  AS creator_name,
+               u.email AS creator_email
+        FROM projects p
+        LEFT JOIN users u ON u.id = p.creator_user_id::int
+        WHERE p.id = $1
+        `,
+        [Number(id)],
+      );
       const row = rows?.[0];
       if (!row) return null;
       return mapProjectRow(row);
@@ -110,7 +200,11 @@ export const resolvers = {
         return `$${params.length}`;
       };
 
+      // público por agora
       where.push(`p.visibility = 'PUBLIC'`);
+
+      // join users para createdBy sem N+1
+      joins.push(`LEFT JOIN users u ON u.id = p.creator_user_id::int`);
 
       if (filters.search) {
         const q = `%${filters.search}%`;
@@ -119,22 +213,19 @@ export const resolvers = {
         where.push(`(p.title ILIKE ${p1} OR p.description ILIKE ${p2})`);
       }
 
-      const needsUcJoin = filters.courseId || filters.year || filters.ucId;
+      // ✅ filtros por UC / course
+      const needsUcJoin = filters.courseId || filters.ucId;
       if (needsUcJoin) {
         joins.push(`JOIN project_uc pu ON pu.project_id = p.id`);
-        joins.push(`JOIN ucs u ON u.id = pu.uc_id`);
+        joins.push(`JOIN ucs ucs1 ON ucs1.id = pu.uc_id`);
 
         if (filters.ucId) {
           const pUc = addParam(Number(filters.ucId));
-          where.push(`u.id = ${pUc}`);
+          where.push(`ucs1.id = ${pUc}`);
         }
         if (filters.courseId) {
           const pCourse = addParam(Number(filters.courseId));
-          where.push(`u.course_id = ${pCourse}`);
-        }
-        if (filters.year) {
-          const pYear = addParam(Number(filters.year));
-          where.push(`u.year = ${pYear}`);
+          where.push(`ucs1.course_id = ${pCourse}`);
         }
       }
 
@@ -164,7 +255,9 @@ export const resolvers = {
 
       const rowsRes = await db.query(
         `
-        SELECT DISTINCT p.*
+        SELECT DISTINCT p.*,
+               u.name  AS creator_name,
+               u.email AS creator_email
         FROM projects p
         ${joinSql}
         ${whereSql}
@@ -182,42 +275,81 @@ export const resolvers = {
   },
 
   Project: {
-    ucIds: async (project) => {
+    // ✅ Agora bate certo com o schema: Project.ucId
+    ucId: async (project) => {
       const db = getDb();
-      return getProjectUcIds(db, project.id);
+      const ids = await getProjectUcId(db, project.id);
+      return ids[0] ?? null; // 1:1
     },
+
     tags: async (project) => {
       const db = getDb();
       return getProjectTags(db, project.id);
     },
 
-    // 🔗 Vai buscar o fileId ao files-manager (via project_id) (opcional no futuro)
+    createdBy: async (project) => {
+      // se veio do JOIN
+      if (project?._creatorName || project?._creatorEmail) {
+        return {
+          id: project.creatorUserId,
+          name: project._creatorName,
+          email: project._creatorEmail,
+        };
+      }
+
+      if (!project?.creatorUserId) return null;
+
+      const db = getDb();
+      const { rows } = await db.query(
+        `SELECT id, name, email FROM users WHERE id = $1`,
+        [Number(project.creatorUserId)],
+      );
+      const u = rows?.[0];
+      if (!u) return { id: project.creatorUserId, name: null, email: null };
+
+      return { id: String(u.id), name: u.name, email: u.email };
+    },
   },
 
   Mutation: {
     createProject: async (_, { input }, ctx) => {
       const db = getDb();
-      const creatorUserId = ctx?.user?.id ? String(ctx.user.id) : null;
+      const authedId = mustAuth(ctx);
 
-      if (!creatorUserId || !ctx?.token) throw new Error("Not authenticated");
+      const title = String(input?.title ?? "").trim();
+      if (!title) throw new Error("Title is required");
 
-      // 1) cria projeto SEM file_id
+      const visibility = input?.visibility || "PUBLIC";
+      const description = input?.description ?? null;
+      const repoUrl = input?.repoUrl ?? null;
+      const demoUrl = input?.demoUrl ?? null;
+      const coverImageUrl = input?.coverImageUrl ?? null;
+
+      const fileId = input?.fileId ? String(input.fileId) : null;
+      if (!fileId) throw new Error("fileId is required");
+
+      // ✅ 1 projeto = 1 UC
+      const ucId = pickUcIdFromInput(input);
+
+      // 1) cria projeto SEM file_id (fica depois do attach)
       const insertRes = await db.query(
         `
         INSERT INTO projects (
           title, description, repo_url, demo_url, cover_image_url,
-          creator_user_id, visibility
+          file_id, creator_user_id, visibility
         )
-        VALUES ($1, $2, $3, $4, $5, $6, 'PUBLIC')
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
         RETURNING *
         `,
         [
-          input.title,
-          input.description ?? null,
-          input.repoUrl ?? null,
-          input.demoUrl ?? null,
-          input.coverImageUrl ?? null,
-          creatorUserId,
+          title,
+          description,
+          repoUrl,
+          demoUrl,
+          coverImageUrl,
+          null, // file_id depois do attach
+          Number(authedId),
+          visibility,
         ],
       );
 
@@ -226,38 +358,39 @@ export const resolvers = {
       const projectId = row.id;
 
       try {
-        if (input.ucIds?.length)
-          await setProjectUcIds(db, projectId, input.ucIds);
-        if (input.tags?.length) await setProjectTags(db, projectId, input.tags);
+        // 2) guardar UC 1:1
+        await setProjectUcId(db, projectId, ucId);
 
-        // 2) anexa o ficheiro ao projeto (files.project_id)
+        // tags (opcional)
+        if (Array.isArray(input.tags) && input.tags.length) {
+          await setProjectTags(db, projectId, input.tags);
+        }
+
+        // 3) anexa ficheiro ao projeto (files.project_id)
         await axios.post(
-          `${FILES_BASE}/files/${input.fileId}/attach`,
-          { projectId: Number(projectId) }, // ✅ number
+          `${FILES_BASE}/files/${encodeURIComponent(fileId)}/attach`,
+          { projectId: Number(projectId) },
           {
             headers: { Authorization: `Bearer ${ctx.token}` },
-            timeout: 15000, // ✅ mais tolerante em Swarm
+            timeout: 15000,
           },
         );
 
-        // 3) só agora guardas file_id no projeto
+        // 4) guarda file_id no projeto
         await db.query(`UPDATE projects SET file_id = $1 WHERE id = $2`, [
-          input.fileId,
+          fileId,
           projectId,
         ]);
       } catch (e) {
-        const status = e?.response?.status;
-        const data = e?.response?.data;
-
-        console.error("[createProject] attach failed", {
+        console.error("[createProject] failed", {
           projectId,
-          fileId: input.fileId,
-          status,
-          data,
+          fileId,
+          status: e?.response?.status,
+          data: e?.response?.data,
           message: e?.message,
         });
 
-        // rollback: apaga o projeto
+        // rollback simples
         try {
           await db.query(`DELETE FROM projects WHERE id = $1`, [projectId]);
         } catch (rbErr) {
@@ -267,38 +400,32 @@ export const resolvers = {
           );
         }
 
-        const pickDetail = (val) => {
-          if (val == null) return null;
-          if (typeof val === "string") return val;
-          // FastAPI costuma vir como { detail: ... }
-          if (typeof val === "object") {
-            if (typeof val.detail === "string") return val.detail;
-            if (typeof val.message === "string") return val.message;
-            try {
-              return JSON.stringify(val);
-            } catch {
-              return String(val);
-            }
-          }
-          return String(val);
-        };
-
-        const detail = pickDetail(data) || pickDetail(e?.message) || "unknown";
-
-        throw new Error(
-          `Failed to create project (file attach failed: ${detail})`,
-        );
+        const detail =
+          pickDetail(e?.response?.data) || pickDetail(e?.message) || "unknown";
+        throw new Error(`Failed to create project: ${detail}`);
       }
 
-      const finalRes = await db.query(`SELECT * FROM projects WHERE id = $1`, [
-        projectId,
-      ]);
+      // devolver com JOIN
+      const finalRes = await db.query(
+        `
+        SELECT p.*,
+               u.name  AS creator_name,
+               u.email AS creator_email
+        FROM projects p
+        LEFT JOIN users u ON u.id = p.creator_user_id::int
+        WHERE p.id = $1
+        `,
+        [Number(projectId)],
+      );
+
       return mapProjectRow(finalRes.rows?.[0]);
     },
 
     updateProject: async (_, { id, input }, ctx) => {
       const db = getDb();
       const pid = Number(id);
+
+      const authedId = mustAuth(ctx);
 
       const existingRes = await db.query(
         `SELECT * FROM projects WHERE id = $1`,
@@ -307,48 +434,55 @@ export const resolvers = {
       const existing = existingRes.rows?.[0];
       if (!existing) throw new Error("Project not found");
 
+      // ownership
+      const ownerId =
+        existing.creator_user_id != null
+          ? String(existing.creator_user_id)
+          : null;
+      if (!ownerId || ownerId !== authedId) throw new Error("Forbidden");
+
       const next = {
-        title: input.title ?? existing.title,
-        description: input.description ?? existing.description,
-        repo_url: input.repoUrl ?? existing.repo_url,
-        demo_url: input.demoUrl ?? existing.demo_url,
-        cover_image_url: input.coverImageUrl ?? existing.cover_image_url,
+        title:
+          input?.title != null ? String(input.title).trim() : existing.title,
+        description: input?.description ?? existing.description,
+        repo_url: input?.repoUrl ?? existing.repo_url,
+        demo_url: input?.demoUrl ?? existing.demo_url,
+        cover_image_url: input?.coverImageUrl ?? existing.cover_image_url,
       };
 
-      // se pediu trocar ficheiro, tenta primeiro anexar (pode falhar)
-      if (input.fileId) {
-        if (!ctx?.token) throw new Error("Not authenticated");
+      if (!next.title) throw new Error("Title is required");
+
+      // se pediu trocar ficheiro, tenta anexar primeiro
+      if (input?.fileId) {
+        const newFileId = String(input.fileId);
         try {
           await axios.post(
-            `${FILES_BASE}/files/${input.fileId}/attach`,
-            { projectId: Number(pid) }, // ✅ number
+            `${FILES_BASE}/files/${encodeURIComponent(newFileId)}/attach`,
+            { projectId: Number(pid) },
             {
               headers: { Authorization: `Bearer ${ctx.token}` },
-              timeout: 15000, // ✅ mais tolerante em Swarm
+              timeout: 15000,
             },
           );
         } catch (e) {
-          const status = e?.response?.status;
-          const data = e?.response?.data;
-
           console.error("[updateProject] attach failed", {
             projectId: pid,
             fileId: input.fileId,
-            status,
-            data,
+            status: e?.response?.status,
+            data: e?.response?.data,
             message: e?.message,
           });
 
           const detail =
-            (typeof data === "string" ? data : data?.detail || data?.message) ||
-            e?.message ||
+            pickDetail(e?.response?.data) ||
+            pickDetail(e?.message) ||
             "unknown";
-
           throw new Error(`Failed to attach new file: ${detail}`);
         }
       }
 
-      const nextFileId = input.fileId ?? existing.file_id;
+      const nextFileId =
+        input?.fileId != null ? String(input.fileId) : existing.file_id;
 
       const updateRes = await db.query(
         `
@@ -373,23 +507,50 @@ export const resolvers = {
         ],
       );
 
-      if (Array.isArray(input.ucIds))
-        await setProjectUcIds(db, pid, input.ucIds);
-      if (Array.isArray(input.tags)) await setProjectTags(db, pid, input.tags);
+      if (!updateRes.rows?.[0]) throw new Error("Failed to update project");
 
-      return mapProjectRow(updateRes.rows?.[0]);
+      // ✅ UC 1:1 (ucId singular)
+      if (input?.ucId !== undefined) {
+        const ucId = pickUcIdFromInput(input);
+        await setProjectUcId(db, pid, ucId);
+      }
+
+      if (Array.isArray(input?.tags)) {
+        await setProjectTags(db, pid, input.tags);
+      }
+
+      const finalRes = await db.query(
+        `
+        SELECT p.*,
+               u.name  AS creator_name,
+               u.email AS creator_email
+        FROM projects p
+        LEFT JOIN users u ON u.id = p.creator_user_id::int
+        WHERE p.id = $1
+        `,
+        [pid],
+      );
+
+      return mapProjectRow(finalRes.rows?.[0]);
     },
 
     deleteProject: async (_, { id }, ctx) => {
       const db = getDb();
       const pid = Number(id);
 
-      const existingRes = await db.query(
-        `SELECT id FROM projects WHERE id = $1`,
+      const authedId = mustAuth(ctx);
+
+      const { rows } = await db.query(
+        `SELECT creator_user_id FROM projects WHERE id = $1`,
         [pid],
       );
-      const existing = existingRes.rows?.[0];
-      if (!existing) return false;
+      const ownerId =
+        rows?.[0]?.creator_user_id != null
+          ? String(rows[0].creator_user_id)
+          : null;
+      if (!ownerId) return false;
+
+      if (ownerId !== authedId) throw new Error("Forbidden");
 
       const delRes = await db.query(`DELETE FROM projects WHERE id = $1`, [
         pid,

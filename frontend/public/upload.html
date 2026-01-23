@@ -23,12 +23,6 @@
       .ring-soft {
         box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
       }
-      .lc-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
     </style>
   </head>
 
@@ -105,8 +99,7 @@
                 </h1>
                 <p class="mt-2 text-sm text-gray-600">
                   Fluxo: <span class="font-semibold">init</span> →
-                  <span class="font-semibold">PUT</span> para storage →
-                  <span class="font-semibold">complete</span> →
+                  <span class="font-semibold">PUT</span> → complete →
                   <span class="font-semibold">createProject</span>
                 </p>
               </div>
@@ -120,38 +113,30 @@
             </div>
 
             <form id="uploadForm" class="mt-6 space-y-6" novalidate>
-              <!-- Row 1 -->
+              <!-- Title / visibility -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label
-                    for="title"
-                    class="block text-sm font-semibold text-gray-700"
-                  >
+                  <label class="block text-sm font-semibold text-gray-700">
                     Título <span class="text-red-600">*</span>
                   </label>
                   <input
                     id="title"
-                    name="title"
                     placeholder="Ex: Sistema de Monitorização de Salas"
                     class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                     required
                   />
                   <p
                     id="titleHint"
-                    class="mt-2 text-xs text-gray-500 hidden"
+                    class="mt-2 text-xs text-red-600 hidden"
                   ></p>
                 </div>
 
                 <div>
-                  <label
-                    for="visibility"
-                    class="block text-sm font-semibold text-gray-700"
-                  >
+                  <label class="block text-sm font-semibold text-gray-700">
                     Visibilidade
                   </label>
                   <select
                     id="visibility"
-                    name="visibility"
                     class="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none"
                     disabled
                   >
@@ -163,17 +148,96 @@
                 </div>
               </div>
 
+              <!-- ✅ Tipo/Curso/UC (sem anos) + 1 projeto = 1 UC -->
+              <div
+                class="rounded-2xl border border-gray-100 bg-gray-50 p-5 ring-soft"
+              >
+                <p class="text-sm font-semibold text-gray-900">
+                  Associação académica (Tipo / Curso / UC)
+                </p>
+                <p class="mt-1 text-xs text-gray-600">
+                  Seleciona <span class="font-semibold">1 UC</span> (1 projeto =
+                  1 UC).
+                </p>
+
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-700">
+                      Tipo de curso
+                    </label>
+                    <select
+                      id="typeSelect"
+                      class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value="">— Seleciona um tipo —</option>
+                      <option value="CTESP">CTeSP</option>
+                      <option value="Licenciatura">Licenciatura</option>
+                      <option value="Mestrado">Mestrado</option>
+                      <option value="Pós-Graduação">Pós-Graduação</option>
+                    </select>
+                    <p id="typeHint" class="mt-2 text-xs text-gray-500"></p>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-700">
+                      Curso
+                    </label>
+                    <select
+                      id="courseSelect"
+                      class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      disabled
+                    >
+                      <option value="">— Seleciona um tipo primeiro —</option>
+                    </select>
+                    <p id="courseHint" class="mt-2 text-xs text-gray-500"></p>
+                  </div>
+
+                  <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold text-gray-700">
+                      Unidade Curricular
+                    </label>
+
+                    <div class="mt-2 flex flex-col sm:flex-row gap-3">
+                      <select
+                        id="ucSelect"
+                        class="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        disabled
+                      >
+                        <option value="">— Seleciona curso primeiro —</option>
+                      </select>
+
+                      <button
+                        id="addUcBtn"
+                        type="button"
+                        class="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled
+                      >
+                        Selecionar
+                      </button>
+                    </div>
+
+                    <div id="ucSelectedWrap" class="mt-4 hidden">
+                      <p class="text-xs font-semibold text-gray-700">
+                        UC selecionada
+                      </p>
+                      <div
+                        id="ucSelectedList"
+                        class="mt-2 flex flex-wrap gap-2"
+                      ></div>
+                    </div>
+
+                    <p id="ucHint" class="mt-3 text-xs text-gray-500"></p>
+                  </div>
+                </div>
+              </div>
+
               <!-- Description -->
               <div>
-                <label
-                  for="description"
-                  class="block text-sm font-semibold text-gray-700"
-                >
+                <label class="block text-sm font-semibold text-gray-700">
                   Descrição
                 </label>
                 <textarea
                   id="description"
-                  name="description"
                   placeholder="Resumo do projeto, stack, objetivos..."
                   class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[130px] resize-y"
                 ></textarea>
@@ -182,50 +246,31 @@
               <!-- Repo/Demo -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label
-                    for="repoUrl"
-                    class="block text-sm font-semibold text-gray-700"
-                  >
+                  <label class="block text-sm font-semibold text-gray-700">
                     Repo URL
                   </label>
                   <input
                     id="repoUrl"
-                    name="repoUrl"
                     placeholder="https://github.com/..."
                     class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
-                  <p
-                    id="repoHint"
-                    class="mt-2 text-xs text-gray-500 hidden"
-                  ></p>
                 </div>
 
                 <div>
-                  <label
-                    for="demoUrl"
-                    class="block text-sm font-semibold text-gray-700"
-                  >
+                  <label class="block text-sm font-semibold text-gray-700">
                     Demo URL
                   </label>
                   <input
                     id="demoUrl"
-                    name="demoUrl"
                     placeholder="https://..."
                     class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
-                  <p
-                    id="demoHint"
-                    class="mt-2 text-xs text-gray-500 hidden"
-                  ></p>
                 </div>
               </div>
 
               <!-- File -->
               <div>
-                <label
-                  for="file"
-                  class="block text-sm font-semibold text-gray-700"
-                >
+                <label class="block text-sm font-semibold text-gray-700">
                   Ficheiro do projeto <span class="text-red-600">*</span>
                 </label>
 
@@ -234,7 +279,6 @@
                 >
                   <input
                     id="file"
-                    name="file"
                     type="file"
                     accept=".pdf,.zip"
                     class="block w-full text-sm file:mr-4 file:rounded-xl file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:opacity-90 transition"
@@ -242,11 +286,8 @@
                   />
                   <p class="mt-3 text-xs text-gray-600">
                     Tipos pretendidos: <span class="font-semibold">PDF</span> ou
-                    <span class="font-semibold">ZIP</span>. (Validação final é
-                    no backend.)
+                    <span class="font-semibold">ZIP</span>.
                   </p>
-
-                  <p id="fileMeta" class="mt-2 text-xs text-gray-500"></p>
                   <p id="fileHint" class="mt-2 text-xs text-red-600 hidden"></p>
                 </div>
               </div>
@@ -254,17 +295,17 @@
               <!-- Actions -->
               <div class="flex flex-col sm:flex-row gap-3">
                 <button
-                  class="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
                   id="submitBtn"
+                  class="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
                   type="submit"
                 >
                   Criar & Upload
                 </button>
 
                 <button
+                  id="cancelBtn"
                   class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
                   type="button"
-                  id="cancelBtn"
                 >
                   Cancelar
                 </button>
@@ -289,70 +330,33 @@
               >
                 <p class="text-sm font-semibold text-red-800">Erro</p>
                 <p id="errorText" class="mt-1 text-sm text-red-700"></p>
-                <p class="mt-2 text-xs text-red-700">
-                  Abre a consola (F12) para detalhes, se necessário.
-                </p>
               </div>
             </form>
           </div>
         </section>
 
-        <!-- Progress / Help -->
+        <!-- Help -->
         <aside class="lg:col-span-4">
           <div
             class="rounded-2xl border border-gray-100 bg-white p-6 ring-soft"
           >
-            <h2 class="text-sm font-semibold text-gray-900">Progresso</h2>
-            <p class="mt-2 text-sm text-gray-600">
-              O upload é feito em 4 etapas. Se falhar, a mensagem indica onde
-              ocorreu.
-            </p>
+            <h2 class="text-sm font-semibold text-gray-900">Requisitos</h2>
+            <ul class="mt-3 text-sm text-gray-600 space-y-2">
+              <li>• Sessão ativa (token).</li>
+              <li>• Ficheiro selecionado (PDF/ZIP).</li>
+              <li>• Título obrigatório.</li>
+              <li>• 1 UC obrigatória.</li>
+            </ul>
 
-            <ol class="mt-5 space-y-3 text-sm">
-              <li class="flex items-center justify-between gap-3">
-                <span class="text-gray-700">1) init</span>
-                <span id="step1" class="text-xs font-semibold text-gray-500"
-                  >—</span
-                >
-              </li>
-              <li class="flex items-center justify-between gap-3">
-                <span class="text-gray-700">2) PUT (storage)</span>
-                <span id="step2" class="text-xs font-semibold text-gray-500"
-                  >—</span
-                >
-              </li>
-              <li class="flex items-center justify-between gap-3">
-                <span class="text-gray-700">3) complete</span>
-                <span id="step3" class="text-xs font-semibold text-gray-500"
-                  >—</span
-                >
-              </li>
-              <li class="flex items-center justify-between gap-3">
-                <span class="text-gray-700">4) createProject</span>
-                <span id="step4" class="text-xs font-semibold text-gray-500"
-                  >—</span
-                >
-              </li>
-            </ol>
+            <p id="sessionHint" class="mt-4 text-xs text-gray-500"></p>
 
-            <div class="mt-6 border-t border-gray-100 pt-5">
-              <h3 class="text-sm font-semibold text-gray-900">Requisitos</h3>
-              <ul class="mt-2 text-sm text-gray-600 space-y-2">
-                <li>• Sessão ativa (token).</li>
-                <li>• Ficheiro selecionado (PDF/ZIP).</li>
-                <li>• Título obrigatório.</li>
-              </ul>
-
-              <p id="sessionHint" class="mt-4 text-xs text-gray-500"></p>
-
-              <a
-                id="loginCta"
-                href="login.html"
-                class="mt-4 hidden w-full inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition"
-              >
-                Fazer login
-              </a>
-            </div>
+            <a
+              id="loginCta"
+              href="login.html"
+              class="mt-4 hidden w-full inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition"
+            >
+              Fazer login
+            </a>
           </div>
         </aside>
       </div>
@@ -362,7 +366,7 @@
       // ==========================
       // CONFIG
       // ==========================
-      const API_BASE = window.location.origin; // ex: http://localhost:8080
+      const API_BASE = "http://localhost:3000";
       const GRAPHQL_URL = `${API_BASE}/graphql`;
 
       // ==========================
@@ -371,31 +375,38 @@
       const uploadForm = document.getElementById("uploadForm");
       const submitBtn = document.getElementById("submitBtn");
       const cancelBtn = document.getElementById("cancelBtn");
-
       const statusArea = document.getElementById("statusArea");
       const statusEl = document.getElementById("status");
       const errorArea = document.getElementById("errorArea");
       const errorText = document.getElementById("errorText");
-
-      const step1 = document.getElementById("step1");
-      const step2 = document.getElementById("step2");
-      const step3 = document.getElementById("step3");
-      const step4 = document.getElementById("step4");
 
       const sessionHint = document.getElementById("sessionHint");
       const loginCta = document.getElementById("loginCta");
 
       const titleInput = document.getElementById("title");
       const titleHint = document.getElementById("titleHint");
-
-      const repoUrlInput = document.getElementById("repoUrl");
-      const demoUrlInput = document.getElementById("demoUrl");
-      const repoHint = document.getElementById("repoHint");
-      const demoHint = document.getElementById("demoHint");
-
       const fileInput = document.getElementById("file");
-      const fileMeta = document.getElementById("fileMeta");
       const fileHint = document.getElementById("fileHint");
+
+      const typeSelect = document.getElementById("typeSelect");
+      const typeHint = document.getElementById("typeHint");
+
+      const courseSelect = document.getElementById("courseSelect");
+      const ucSelect = document.getElementById("ucSelect");
+      const addUcBtn = document.getElementById("addUcBtn");
+
+      const courseHint = document.getElementById("courseHint");
+      const ucHint = document.getElementById("ucHint");
+
+      const ucSelectedWrap = document.getElementById("ucSelectedWrap");
+      const ucSelectedList = document.getElementById("ucSelectedList");
+
+      // ==========================
+      // STATE
+      // ==========================
+      let coursesCache = [];
+      let ucsCache = [];
+      let selectedUcId = ""; // ✅ 1 projeto = 1 UC
 
       // ==========================
       // HELPERS
@@ -410,8 +421,8 @@
       }
 
       function clearStatus() {
-        statusEl.textContent = "";
         statusArea.classList.add("hidden");
+        statusEl.textContent = "";
       }
 
       function setError(msg) {
@@ -424,52 +435,66 @@
         errorText.textContent = "";
       }
 
-      function resetSteps() {
-        [step1, step2, step3, step4].forEach((el) => {
-          el.textContent = "—";
-          el.className = "text-xs font-semibold text-gray-500";
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function normalizeTypeForUI(type) {
+        const t = String(type || "").trim();
+        if (!t) return "";
+        const up = t.toUpperCase();
+
+        if (up === "CTESP") return "CTESP";
+        if (up === "LICENCIATURA") return "Licenciatura";
+        if (up === "MESTRADO") return "Mestrado";
+
+        if (up === "PÓS-GRADUAÇÃO" || up === "POS-GRADUAÇÃO")
+          return "Pós-Graduação";
+        if (up === "POS-GRADUACAO" || up === "PÓS-GRADUACAO")
+          return "Pós-Graduação";
+        if (t === "Pós-Graduação") return "Pós-Graduação";
+
+        return t;
+      }
+
+      async function gql(query, variables = {}) {
+        const token = getToken();
+        const res = await fetch(GRAPHQL_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ query, variables }),
         });
-      }
 
-      function markStep(el, state) {
-        // state: "doing" | "ok" | "err"
-        if (state === "doing") {
-          el.textContent = "Em curso…";
-          el.className = "text-xs font-semibold text-gray-700";
-        } else if (state === "ok") {
-          el.textContent = "Concluído";
-          el.className = "text-xs font-semibold text-green-700";
-        } else {
-          el.textContent = "Erro";
-          el.className = "text-xs font-semibold text-red-700";
-        }
-      }
-
-      function setInputError(input, hintEl, msg) {
-        input.classList.add("border-red-300");
-        input.classList.add("focus:border-red-400", "focus:ring-red-200");
-        hintEl.textContent = msg;
-        hintEl.classList.remove("hidden");
-      }
-
-      function clearInputError(input, hintEl) {
-        input.classList.remove(
-          "border-red-300",
-          "focus:border-red-400",
-          "focus:ring-red-200",
-        );
-        hintEl.textContent = "";
-        hintEl.classList.add("hidden");
-      }
-
-      function isValidUrl(v) {
-        if (!v) return true;
+        const text = await res.text().catch(() => "");
+        let json = null;
         try {
-          const u = new URL(v);
-          return u.protocol === "http:" || u.protocol === "https:";
+          json = text ? JSON.parse(text) : null;
         } catch {
-          return false;
+          throw new Error(`GraphQL: resposta não-JSON (HTTP ${res.status})`);
         }
+
+        if (!res.ok) {
+          const msg =
+            json?.errors?.[0]?.message ||
+            json?.message ||
+            text ||
+            `HTTP ${res.status}`;
+          throw new Error(msg);
+        }
+
+        if (json?.errors?.length) {
+          throw new Error(json.errors[0].message || "Erro GraphQL");
+        }
+
+        return json.data;
       }
 
       async function postJson(url, body, token) {
@@ -496,82 +521,8 @@
         return json;
       }
 
-      async function gql(query, variables, token) {
-        const res = await fetch(GRAPHQL_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ query, variables }),
-        });
-
-        const text = await res.text().catch(() => "");
-        let json = null;
-
-        try {
-          json = text ? JSON.parse(text) : null;
-        } catch {
-          console.error("GraphQL non-JSON response:", res.status, text);
-          throw new Error(`GraphQL: resposta não-JSON (HTTP ${res.status})`);
-        }
-
-        if (!res.ok) {
-          console.error("GraphQL HTTP error:", res.status, json);
-          const msg =
-            json?.errors?.[0]?.message ||
-            json?.message ||
-            text ||
-            `HTTP ${res.status}`;
-          throw new Error(msg);
-        }
-
-        if (json?.errors?.length) {
-          console.error("GraphQL errors full:", json.errors);
-
-          const e0 = json.errors[0];
-          const detail =
-            e0?.extensions?.detail ||
-            e0?.extensions?.response?.body?.detail ||
-            e0?.extensions?.response?.body?.message ||
-            e0?.extensions?.originalError?.message ||
-            e0?.extensions?.exception?.message ||
-            null;
-
-          const toStr = (v) => {
-            if (v == null) return "";
-            if (typeof v === "string") return v;
-            try {
-              return JSON.stringify(v);
-            } catch {
-              return String(v);
-            }
-          };
-
-          throw new Error(
-            detail
-              ? `${toStr(e0.message)} — ${toStr(detail)}`
-              : toStr(e0.message) || "Erro GraphQL",
-          );
-        }
-
-        return json.data;
-      }
-
-      function toPublicMinioUrl(url) {
-        // Em swarm/gateway pode não ser "minio"; mantemos compatibilidade com dev
-        try {
-          const u = new URL(url);
-          if (u.hostname === "minio") u.hostname = "localhost";
-          return u.toString();
-        } catch {
-          return url;
-        }
-      }
-
       async function uploadToPresignedUrl(uploadUrl, file) {
-        const publicUrl = toPublicMinioUrl(uploadUrl);
-        const res = await fetch(publicUrl, {
+        const res = await fetch(uploadUrl, {
           method: "PUT",
           headers: { "Content-Type": file.type || "application/octet-stream" },
           body: file,
@@ -585,20 +536,169 @@
         }
       }
 
-      function bytesToHuman(bytes) {
-        if (!Number.isFinite(bytes)) return "";
-        const units = ["B", "KB", "MB", "GB"];
-        let b = bytes;
-        let i = 0;
-        while (b >= 1024 && i < units.length - 1) {
-          b /= 1024;
-          i++;
+      // ==========================
+      // COURSES / UCS UI
+      // ==========================
+      function resetCourseSelect() {
+        courseSelect.disabled = true;
+        courseSelect.innerHTML = `<option value="">— Seleciona um tipo primeiro —</option>`;
+        courseHint.textContent = "";
+        courseSelect.value = "";
+      }
+
+      function resetUcSelect() {
+        ucSelect.disabled = true;
+        addUcBtn.disabled = true;
+        ucSelect.innerHTML = `<option value="">— Seleciona curso primeiro —</option>`;
+        ucHint.textContent = "";
+        ucSelect.value = "";
+
+        selectedUcId = "";
+        renderSelectedUc();
+      }
+
+      function renderCoursesForType(type) {
+        courseSelect.innerHTML = `<option value="">— Seleciona um curso —</option>`;
+        courseSelect.value = "";
+        selectedUcId = "";
+        renderSelectedUc();
+
+        const list = coursesCache
+          .filter((c) => normalizeTypeForUI(c.type) === type)
+          .sort((a, b) => String(a.name).localeCompare(String(b.name), "pt"));
+
+        if (!type) {
+          resetCourseSelect();
+          resetUcSelect();
+          typeHint.textContent = "";
+          return;
         }
-        return `${b.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+
+        if (!list.length) {
+          courseSelect.disabled = true;
+          courseHint.textContent = "Sem cursos para este tipo (confirma seed).";
+          resetUcSelect();
+          return;
+        }
+
+        courseSelect.disabled = false;
+        courseHint.textContent = `${list.length} curso(s) disponível(eis).`;
+
+        for (const c of list) {
+          const opt = document.createElement("option");
+          opt.value = String(c.id);
+          opt.textContent = c.name;
+          courseSelect.appendChild(opt);
+        }
+
+        resetUcSelect();
+      }
+
+      function renderUcs() {
+        ucSelect.innerHTML = "";
+
+        if (!courseSelect.value) {
+          resetUcSelect();
+          return;
+        }
+
+        ucSelect.disabled = false;
+
+        if (!ucsCache.length) {
+          addUcBtn.disabled = true;
+          ucSelect.innerHTML = `<option value="">— Sem UCs para este curso —</option>`;
+          ucHint.textContent = "Sem UCs encontradas (confirma seed).";
+          return;
+        }
+
+        addUcBtn.disabled = false;
+        ucSelect.innerHTML = `<option value="">— Seleciona uma UC —</option>`;
+        for (const u of ucsCache) {
+          const opt = document.createElement("option");
+          opt.value = String(u.id);
+          opt.textContent = u.name;
+          ucSelect.appendChild(opt);
+        }
+
+        ucHint.textContent = `${ucsCache.length} UC(s) encontrada(s).`;
+      }
+
+      function renderSelectedUc() {
+        if (!selectedUcId) {
+          ucSelectedWrap.classList.add("hidden");
+          ucSelectedList.innerHTML = "";
+          return;
+        }
+
+        ucSelectedWrap.classList.remove("hidden");
+        const u = ucsCache.find((x) => String(x.id) === String(selectedUcId));
+        const label = u ? u.name : `UC ${selectedUcId}`;
+
+        ucSelectedList.innerHTML = `
+          <span class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700">
+            ${escapeHtml(label)}
+            <button type="button" id="removeSelectedUcBtn" class="text-gray-400 hover:text-gray-900">×</button>
+          </span>
+        `;
+
+        document
+          .getElementById("removeSelectedUcBtn")
+          ?.addEventListener("click", () => {
+            selectedUcId = "";
+            renderSelectedUc();
+          });
+      }
+
+      async function loadCourses() {
+        const data = await gql(`
+          query {
+            courses { id type name }
+          }
+        `);
+        coursesCache = data?.courses || [];
+
+        if (!coursesCache.length) {
+          typeHint.textContent =
+            "Sem cursos disponíveis (confirma seed na BD).";
+        } else {
+          typeHint.textContent = `${coursesCache.length} curso(s) carregado(s).`;
+        }
+      }
+
+      async function loadUcs(courseId) {
+        ucsCache = [];
+        if (!courseId) {
+          renderUcs();
+          return;
+        }
+
+        // ✅ SEM year
+        const data = await gql(
+          `
+          query($courseId: ID!, $search: String) {
+            ucs(courseId: $courseId, search: $search) {
+              id
+              name
+            }
+          }
+          `,
+          { courseId: String(courseId), search: null },
+        );
+
+        ucsCache = data?.ucs || [];
+        renderUcs();
+
+        if (
+          selectedUcId &&
+          !ucsCache.some((u) => String(u.id) === String(selectedUcId))
+        ) {
+          selectedUcId = "";
+        }
+        renderSelectedUc();
       }
 
       // ==========================
-      // INIT UI
+      // SESSION UI
       // ==========================
       function refreshSessionUI() {
         const token = getToken();
@@ -606,7 +706,6 @@
           sessionHint.textContent =
             "Sessão: sem login (necessário para upload).";
           loginCta.classList.remove("hidden");
-          submitBtn.disabled = false; // ainda deixa clicar, mas o handler bloqueia
         } else {
           sessionHint.textContent = "Sessão: ativa.";
           loginCta.classList.add("hidden");
@@ -614,55 +713,65 @@
       }
 
       refreshSessionUI();
-      resetSteps();
 
       cancelBtn.addEventListener("click", () => {
         window.location.href = "projects.html";
       });
 
-      // file meta
-      fileInput.addEventListener("change", () => {
-        fileHint.classList.add("hidden");
-        fileHint.textContent = "";
-        const f = fileInput.files?.[0];
-        if (!f) {
-          fileMeta.textContent = "";
-          return;
-        }
-        fileMeta.textContent = `${f.name} · ${bytesToHuman(f.size)} · ${f.type || "application/octet-stream"}`;
-      });
-
-      // basic validation on blur
       titleInput.addEventListener("blur", () => {
         const v = titleInput.value.trim();
-        if (!v) setInputError(titleInput, titleHint, "O título é obrigatório.");
-        else clearInputError(titleInput, titleHint);
+        if (!v) {
+          titleHint.textContent = "O título é obrigatório.";
+          titleHint.classList.remove("hidden");
+        } else {
+          titleHint.textContent = "";
+          titleHint.classList.add("hidden");
+        }
       });
 
-      function validateUrlField(input, hintEl, label) {
-        const v = input.value.trim();
-        if (!v) {
-          clearInputError(input, hintEl);
-          return true;
-        }
-        if (!isValidUrl(v)) {
-          setInputError(
-            input,
-            hintEl,
-            `${label}: URL inválido (usa http/https).`,
-          );
-          return false;
-        }
-        clearInputError(input, hintEl);
-        return true;
-      }
+      // ==========================
+      // EVENTS (Tipo / Curso / UC)
+      // ==========================
+      typeSelect.addEventListener("change", async () => {
+        const type = typeSelect.value || "";
+        renderCoursesForType(type);
+      });
 
-      repoUrlInput.addEventListener("blur", () =>
-        validateUrlField(repoUrlInput, repoHint, "Repo URL"),
-      );
-      demoUrlInput.addEventListener("blur", () =>
-        validateUrlField(demoUrlInput, demoHint, "Demo URL"),
-      );
+      courseSelect.addEventListener("change", async () => {
+        const courseId = courseSelect.value || "";
+        selectedUcId = "";
+        renderSelectedUc();
+        await loadUcs(courseId);
+      });
+
+      // (opcional) se quiseres, permite "selecionar" a UC só por escolher no dropdown
+      ucSelect.addEventListener("change", () => {
+        // só atualiza UI do botão; a seleção final continua a ser via "Selecionar"
+        // (mantém o teu fluxo atual)
+      });
+
+      addUcBtn.addEventListener("click", () => {
+        const id = ucSelect.value;
+        if (!id) return;
+
+        selectedUcId = String(id);
+        renderSelectedUc();
+      });
+
+      // ==========================
+      // INIT load courses
+      // ==========================
+      (async function init() {
+        try {
+          resetCourseSelect();
+          resetUcSelect();
+          await loadCourses();
+        } catch (e) {
+          typeHint.textContent =
+            "Erro ao carregar cursos/UCs. Vê consola (F12).";
+          console.error(e);
+        }
+      })();
 
       // ==========================
       // SUBMIT
@@ -671,7 +780,6 @@
         e.preventDefault();
         clearError();
         clearStatus();
-        resetSteps();
 
         const token = getToken();
         if (!token) {
@@ -682,56 +790,48 @@
 
         const title = titleInput.value.trim();
         const description = document.getElementById("description").value.trim();
-        const repoUrl = repoUrlInput.value.trim();
-        const demoUrl = demoUrlInput.value.trim();
+        const repoUrl = document.getElementById("repoUrl").value.trim();
+        const demoUrl = document.getElementById("demoUrl").value.trim();
         const file = fileInput.files?.[0];
 
-        let ok = true;
-
         if (!title) {
-          setInputError(titleInput, titleHint, "O título é obrigatório.");
-          ok = false;
-        } else {
-          clearInputError(titleInput, titleHint);
-        }
-
-        ok = validateUrlField(repoUrlInput, repoHint, "Repo URL") && ok;
-        ok = validateUrlField(demoUrlInput, demoHint, "Demo URL") && ok;
-
-        if (!file) {
-          fileHint.textContent = "Escolhe um ficheiro (PDF/ZIP).";
-          fileHint.classList.remove("hidden");
-          ok = false;
-        }
-
-        if (!ok) {
+          titleHint.textContent = "O título é obrigatório.";
+          titleHint.classList.remove("hidden");
           setError("Corrige os campos assinalados.");
           return;
         }
 
-        // inputs do projeto
+        if (!file) {
+          fileHint.textContent = "Escolhe um ficheiro (PDF/ZIP).";
+          fileHint.classList.remove("hidden");
+          setError("Corrige os campos assinalados.");
+          return;
+        }
+
+        // 1 projeto = 1 UC (obrigatório)
+        if (!selectedUcId) {
+          setError("Seleciona 1 Unidade Curricular (1 projeto = 1 UC).");
+          return;
+        }
+
+        // ✅ schema atual: ucId é SINGULAR
         const inputBase = {
           title,
           description: description || null,
           repoUrl: repoUrl || null,
           demoUrl: demoUrl || null,
           coverImageUrl: null,
-          ucIds: [],
+          ucId: String(selectedUcId),
           tags: [],
         };
 
-        // prevent double-submit
         submitBtn.disabled = true;
         const prevText = submitBtn.textContent;
         submitBtn.textContent = "A enviar...";
 
         try {
           // 1) init
-          markStep(step1, "doing");
-          setStatus(
-            `1/4 A iniciar upload...\nFicheiro: ${file.name} (${file.size} bytes)`,
-          );
-
+          setStatus(`1/4 A iniciar upload...\nFicheiro: ${file.name}`);
           const init = await postJson(
             `${API_BASE}/files/init`,
             {
@@ -744,35 +844,23 @@
 
           const fileId = init?.fileId;
           const uploadUrl = init?.uploadUrl;
+          if (!fileId || !uploadUrl)
+            throw new Error("Resposta inválida do /files/init");
 
-          if (!fileId || !uploadUrl) {
-            markStep(step1, "err");
-            throw new Error(
-              "Resposta inválida do /files/init (falta fileId/uploadUrl).",
-            );
-          }
-          markStep(step1, "ok");
-
-          // 2) PUT storage
-          markStep(step2, "doing");
+          // 2) PUT
           setStatus(`2/4 A enviar para storage (PUT)...\nfileId: ${fileId}`);
           await uploadToPresignedUrl(uploadUrl, file);
-          markStep(step2, "ok");
 
           // 3) complete
-          markStep(step3, "doing");
           setStatus(`3/4 A finalizar upload...`);
           await postJson(
             `${API_BASE}/files/${encodeURIComponent(fileId)}/complete`,
             {},
             token,
           );
-          markStep(step3, "ok");
 
           // 4) createProject
-          markStep(step4, "doing");
           setStatus(`4/4 A criar projeto...`);
-
           const data = await gql(
             `
             mutation ($input: CreateProjectInput!) {
@@ -780,38 +868,32 @@
                 id
                 title
                 fileId
+                ucId
               }
             }
             `,
             { input: { ...inputBase, fileId } },
-            token,
           );
 
           const created = data?.createProject;
-          if (!created?.id) {
-            markStep(step4, "err");
+          if (!created?.id)
             throw new Error("Projeto criado sem ID (resposta inesperada).");
-          }
-          markStep(step4, "ok");
 
           setStatus(
-            `✅ Sucesso!\nProjeto: ${created.title}\nID: ${created.id}`,
+            `✅ Sucesso!\nProjeto: ${created.title}\nID: ${created.id}\nUC: ${
+              created.ucId || "-"
+            }`,
           );
-          window.location.href = `project.html?id=${encodeURIComponent(created.id)}`;
+
+          window.location.href = `project.html?id=${encodeURIComponent(
+            created.id,
+          )}`;
         } catch (err) {
           console.error(err);
           setError(err?.message || "Erro desconhecido");
-
-          // marca step atual como erro se ainda estiver "—" ou "Em curso…"
-          // (não tenta adivinhar; deixa os passos anteriores como estão)
+        } finally {
           submitBtn.disabled = false;
           submitBtn.textContent = prevText;
-        } finally {
-          // se não redirecionou, repõe botão
-          if (!window.location.href.includes("project.html")) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = prevText;
-          }
         }
       });
     </script>

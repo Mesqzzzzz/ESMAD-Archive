@@ -29,12 +29,6 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
-      .lc-6 {
-        display: -webkit-box;
-        -webkit-line-clamp: 6;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
     </style>
   </head>
 
@@ -101,6 +95,23 @@
             type="button"
           >
             Download
+          </button>
+
+          <!-- Owner actions -->
+          <button
+            id="editBtn"
+            class="hidden inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+            type="button"
+          >
+            Editar
+          </button>
+
+          <button
+            id="deleteBtn"
+            class="hidden inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
+            type="button"
+          >
+            Eliminar
           </button>
         </div>
       </nav>
@@ -175,6 +186,79 @@
               ></span>
             </div>
 
+            <!-- Edit form -->
+            <div
+              id="editWrap"
+              class="hidden mt-6 rounded-2xl border border-gray-100 bg-gray-50 p-5 ring-soft"
+            >
+              <p class="text-sm font-semibold text-gray-900">Editar projeto</p>
+              <p class="mt-1 text-xs text-gray-600">
+                Apenas o criador pode editar/eliminar.
+              </p>
+
+              <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="md:col-span-2">
+                  <label class="block text-xs font-semibold text-gray-700"
+                    >Título</label
+                  >
+                  <input
+                    id="editTitle"
+                    class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                <div class="md:col-span-2">
+                  <label class="block text-xs font-semibold text-gray-700"
+                    >Descrição</label
+                  >
+                  <textarea
+                    id="editDescription"
+                    class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[120px] resize-y"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700"
+                    >Repo URL</label
+                  >
+                  <input
+                    id="editRepoUrl"
+                    class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    placeholder="https://github.com/..."
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700"
+                    >Demo URL</label
+                  >
+                  <input
+                    id="editDemoUrl"
+                    class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              <div class="mt-4 flex flex-wrap gap-3 justify-end">
+                <button
+                  id="cancelEditBtn"
+                  class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+                  type="button"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  id="saveEditBtn"
+                  class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
+                  type="button"
+                >
+                  Guardar alterações
+                </button>
+              </div>
+            </div>
+
             <!-- Status -->
             <div
               id="statusWrap"
@@ -214,21 +298,6 @@
               A consulta é pública. Para descarregar anexos, é necessário login.
             </p>
 
-            <div class="mt-5 space-y-3">
-              <div class="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                <p class="text-xs text-gray-500">Sem login</p>
-                <p class="mt-1 text-sm font-semibold text-gray-900">
-                  Visualizar detalhes do projeto
-                </p>
-              </div>
-              <div class="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                <p class="text-xs text-gray-500">Com login</p>
-                <p class="mt-1 text-sm font-semibold text-gray-900">
-                  Descarregar ficheiros e aceder a recursos
-                </p>
-              </div>
-            </div>
-
             <a
               id="loginCta"
               href="login.html"
@@ -266,9 +335,9 @@
 
     <script>
       // ==========================
-      // CONFIG
+      // CONFIG (gateway)
       // ==========================
-      const API_BASE = window.location.origin; // ex: http://localhost:8080
+      const API_BASE = "http://localhost:3000";
       const GRAPHQL_URL = `${API_BASE}/graphql`;
 
       // ==========================
@@ -287,11 +356,23 @@
           .replaceAll("'", "&#039;");
       }
 
+      function safeDateTime(v) {
+        const d = new Date(v);
+        return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString("pt-PT");
+      }
+
       function getToken() {
         return localStorage.getItem("token");
       }
 
-      // devolve Int (valida)
+      function getUser() {
+        try {
+          return JSON.parse(localStorage.getItem("user") || "null");
+        } catch {
+          return null;
+        }
+      }
+
       function getProjectIdInt() {
         const params = new URLSearchParams(window.location.search);
         const raw = params.get("id");
@@ -316,7 +397,6 @@
         try {
           json = text ? JSON.parse(text) : null;
         } catch {
-          console.error("Resposta não-JSON:", res.status, text);
           throw new Error(`Backend não devolveu JSON (HTTP ${res.status})`);
         }
 
@@ -338,7 +418,7 @@
       }
 
       // ==========================
-      // DATA FETCHING
+      // DATA
       // ==========================
       async function fetchProject(id) {
         const data = await gql(
@@ -351,13 +431,55 @@
               repoUrl
               demoUrl
               createdAt
+              updatedAt
               fileId
+              creatorUserId
+              createdBy { id name email }
+              ucId
+              tags
             }
           }
         `,
           { id },
         );
         return data.project;
+      }
+
+      async function updateProject(id, input) {
+        const data = await gql(
+          `
+          mutation ($id: Int!, $input: UpdateProjectInput!) {
+            updateProject(id: $id, input: $input) {
+              id
+              title
+              description
+              repoUrl
+              demoUrl
+              createdAt
+              updatedAt
+              fileId
+              creatorUserId
+              createdBy { id name email }
+              ucId
+              tags
+            }
+          }
+        `,
+          { id, input },
+        );
+        return data.updateProject;
+      }
+
+      async function deleteProject(id) {
+        const data = await gql(
+          `
+          mutation ($id: Int!) {
+            deleteProject(id: $id)
+          }
+        `,
+          { id },
+        );
+        return !!data.deleteProject;
       }
 
       async function fetchDownloadUrl(fileId) {
@@ -390,16 +512,6 @@
       let notifTimer = null;
       let lastShownNotificationId = null;
 
-      function safeDate(v) {
-        try {
-          const d = new Date(v);
-          if (Number.isNaN(d.getTime())) return "";
-          return d.toLocaleString("pt-PT");
-        } catch {
-          return "";
-        }
-      }
-
       function pickMessage(n) {
         return (
           n.message ||
@@ -422,9 +534,7 @@
         if (!token) return;
 
         try {
-          // Se o teu gateway servir frontend+api no mesmo origin, relativo está OK.
-          // Se precisares, troca para: `${API_BASE}/notifications/${id}/read`
-          const res = await fetch(`/notifications/${id}/read`, {
+          const res = await fetch(`${API_BASE}/notifications/${id}/read`, {
             method: "POST",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -459,10 +569,12 @@
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
               <p class="text-sm font-semibold">Nova notificação ✅</p>
-              <p class="mt-2 text-sm text-white/90 whitespace-pre-wrap">${escapeHtml(msg)}</p>
+              <p class="mt-2 text-sm text-white/90 whitespace-pre-wrap">${escapeHtml(
+                msg,
+              )}</p>
 
               <div class="mt-3 flex items-center justify-between gap-4 text-xs text-white/60">
-                <span>${createdAt ? safeDate(createdAt) : ""}</span>
+                <span>${createdAt ? safeDateTime(createdAt) : ""}</span>
                 <span>#${escapeHtml(String(n.id))}</span>
               </div>
 
@@ -504,18 +616,16 @@
         const token = getToken();
         if (!token) return [];
 
-        const url = `/notifications/?unread=true&limit=${encodeURIComponent(limit)}&offset=0`;
+        const url = `${API_BASE}/notifications/?unread=true&limit=${encodeURIComponent(
+          limit,
+        )}&offset=0`;
 
         const res = await fetch(url, {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!res.ok) {
-          const t = await res.text().catch(() => "");
-          console.warn("notifications fetch failed:", res.status, t);
-          return [];
-        }
+        if (!res.ok) return [];
 
         const json = await res.json().catch(() => null);
         if (Array.isArray(json)) return json;
@@ -534,9 +644,7 @@
         try {
           const items = await fetchUnreadNotifications(1);
           if (items.length > 0) showToastForNotification(items[0]);
-        } catch (e) {
-          console.warn("checkNotificationsOnce error:", e);
-        }
+        } catch {}
       }
 
       function startNotificationsPolling() {
@@ -553,6 +661,34 @@
       }
 
       // ==========================
+      // OWNER UI
+      // ==========================
+      const editBtn = document.getElementById("editBtn");
+      const deleteBtn = document.getElementById("deleteBtn");
+      const editWrap = document.getElementById("editWrap");
+      const cancelEditBtn = document.getElementById("cancelEditBtn");
+      const saveEditBtn = document.getElementById("saveEditBtn");
+
+      const editTitle = document.getElementById("editTitle");
+      const editDescription = document.getElementById("editDescription");
+      const editRepoUrl = document.getElementById("editRepoUrl");
+      const editDemoUrl = document.getElementById("editDemoUrl");
+
+      function isOwner(project) {
+        const u = getUser();
+        const uid = u?.id != null ? String(u.id) : null;
+        const owner = project?.creatorUserId
+          ? String(project.creatorUserId)
+          : null;
+        return !!uid && !!owner && uid === owner;
+      }
+
+      function toggleEdit(open) {
+        if (open) editWrap.classList.remove("hidden");
+        else editWrap.classList.add("hidden");
+      }
+
+      // ==========================
       // INIT
       // ==========================
       document.addEventListener("DOMContentLoaded", async () => {
@@ -562,90 +698,187 @@
 
         if (!getToken()) loginCta.classList.remove("hidden");
 
-        // start notifications
         startNotificationsPolling();
 
         if (!id) {
           setStatus(`Falta ?id=... (valor atual: ${raw || "null"})`);
           downloadBtn.disabled = true;
-          downloadBtn.textContent = "Download";
           return;
         }
 
         setStatus("A carregar projeto...");
 
-        try {
-          const p = await fetchProject(id);
+        let project = null;
 
-          if (!p) {
+        try {
+          project = await fetchProject(id);
+
+          if (!project) {
             setStatus("Projeto não encontrado.");
             return;
           }
 
-          document.getElementById("title").textContent = p.title || "Projeto";
+          const createdText = safeDateTime(project.createdAt);
+          const who =
+            project.createdBy?.name ||
+            project.createdBy?.email ||
+            project.creatorUserId ||
+            "—";
+
+          document.getElementById("title").textContent =
+            project.title || "Projeto";
           document.getElementById("description").textContent =
-            p.description || "";
+            project.description || "";
+
           document.getElementById("meta").textContent =
-            `ID: ${p.id} • Criado: ${
-              p.createdAt ? new Date(p.createdAt).toLocaleString("pt-PT") : "-"
-            }`;
+            `ID: ${project.id} • Criado: ${createdText} • Criado por: ${who}`;
 
           document.getElementById("debug").textContent = JSON.stringify(
-            { urlIdRaw: raw, urlIdInt: id, project: p },
+            { urlIdRaw: raw, urlIdInt: id, project },
             null,
             2,
           );
 
           // Repo/Demo
-          if (p.repoUrl) {
+          if (project.repoUrl) {
             const btn = document.getElementById("repoBtn");
-            btn.href = p.repoUrl;
+            btn.href = project.repoUrl;
             btn.classList.remove("hidden");
           }
-          if (p.demoUrl) {
+          if (project.demoUrl) {
             const btn = document.getElementById("demoBtn");
-            btn.href = p.demoUrl;
+            btn.href = project.demoUrl;
             btn.classList.remove("hidden");
           }
 
           // File badge
           const fileBadge = document.getElementById("fileBadge");
-          if (p.fileId) {
-            fileBadge.textContent = `Ficheiro: ${p.fileId}`;
+          if (project.fileId) {
+            fileBadge.textContent = `Ficheiro: ${project.fileId}`;
             fileBadge.classList.remove("hidden");
           }
 
           // Download
-          if (!p.fileId) {
+          if (!project.fileId) {
             downloadBtn.disabled = true;
             downloadBtn.textContent = "Sem ficheiro";
             setStatus("Este projeto não tem ficheiro associado.");
-            return;
+          } else {
+            downloadBtn.disabled = false;
+            downloadBtn.textContent = "Download";
+            downloadBtn.addEventListener("click", async () => {
+              try {
+                setStatus("A gerar link de download...");
+                downloadBtn.disabled = true;
+
+                const url = await fetchDownloadUrl(project.fileId);
+
+                setStatus("A abrir download...");
+                window.open(url, "_blank", "noopener,noreferrer");
+              } catch (e) {
+                setStatus(e.message || "Erro ao descarregar");
+              } finally {
+                downloadBtn.disabled = false;
+              }
+            });
           }
 
-          downloadBtn.disabled = false;
-          downloadBtn.textContent = "Download";
+          // Owner actions
+          if (isOwner(project)) {
+            editBtn.classList.remove("hidden");
+            deleteBtn.classList.remove("hidden");
 
-          downloadBtn.addEventListener("click", async () => {
-            try {
-              setStatus("A gerar link de download...");
-              downloadBtn.disabled = true;
+            editBtn.addEventListener("click", () => {
+              // prefill
+              editTitle.value = project.title || "";
+              editDescription.value = project.description || "";
+              editRepoUrl.value = project.repoUrl || "";
+              editDemoUrl.value = project.demoUrl || "";
+              toggleEdit(true);
+            });
 
-              const url = await fetchDownloadUrl(p.fileId);
+            cancelEditBtn.addEventListener("click", () => toggleEdit(false));
 
-              setStatus("A abrir download...");
-              window.open(url, "_blank", "noopener,noreferrer");
-            } catch (e) {
-              console.error(e);
-              setStatus(e.message || "Erro ao descarregar");
-            } finally {
-              downloadBtn.disabled = false;
-            }
-          });
+            saveEditBtn.addEventListener("click", async () => {
+              try {
+                setStatus("A guardar alterações...");
+
+                const input = {
+                  title: editTitle.value.trim() || null,
+                  description: editDescription.value.trim() || null,
+                  repoUrl: editRepoUrl.value.trim() || null,
+                  demoUrl: editDemoUrl.value.trim() || null,
+                };
+
+                // remove nulls (não obrigas a overwrites)
+                for (const k of Object.keys(input)) {
+                  if (input[k] === null) delete input[k];
+                }
+
+                project = await updateProject(id, input);
+
+                // refresh UI
+                document.getElementById("title").textContent =
+                  project.title || "Projeto";
+                document.getElementById("description").textContent =
+                  project.description || "";
+
+                const createdText = safeDateTime(project.createdAt);
+                const who =
+                  project.createdBy?.name ||
+                  project.createdBy?.email ||
+                  project.creatorUserId ||
+                  "—";
+
+                document.getElementById("meta").textContent =
+                  `ID: ${project.id} • Criado: ${createdText} • Criado por: ${who}`;
+
+                document.getElementById("debug").textContent = JSON.stringify(
+                  { urlIdRaw: raw, urlIdInt: id, project },
+                  null,
+                  2,
+                );
+
+                // Repo/Demo buttons
+                const repoBtn = document.getElementById("repoBtn");
+                if (project.repoUrl) {
+                  repoBtn.href = project.repoUrl;
+                  repoBtn.classList.remove("hidden");
+                } else repoBtn.classList.add("hidden");
+
+                const demoBtn = document.getElementById("demoBtn");
+                if (project.demoUrl) {
+                  demoBtn.href = project.demoUrl;
+                  demoBtn.classList.remove("hidden");
+                } else demoBtn.classList.add("hidden");
+
+                toggleEdit(false);
+                setStatus("✅ Alterações guardadas.");
+              } catch (e) {
+                setStatus(e.message || "Erro a guardar");
+              }
+            });
+
+            deleteBtn.addEventListener("click", async () => {
+              const ok = confirm(
+                "Tens a certeza que queres eliminar este projeto? Esta ação não pode ser desfeita.",
+              );
+              if (!ok) return;
+
+              try {
+                setStatus("A eliminar projeto...");
+                const deleted = await deleteProject(id);
+                if (!deleted) throw new Error("Não foi possível eliminar.");
+                setStatus("✅ Projeto eliminado. A voltar...");
+                window.location.href = "projects.html";
+              } catch (e) {
+                setStatus(e.message || "Erro a eliminar");
+              }
+            });
+          }
 
           setStatus("Pronto.");
         } catch (err) {
-          console.error(err);
           setStatus(err.message || "Erro a carregar projeto");
         }
       });

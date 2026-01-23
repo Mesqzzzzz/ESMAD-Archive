@@ -23,7 +23,6 @@
       .ring-soft {
         box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
       }
-      /* line-clamp via utility fallback (caso não tenhas plugin) */
       .lc-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -40,7 +39,6 @@
   </head>
 
   <body class="bg-white font-sans text-gray-900">
-    <!-- Top bar (institucional) -->
     <div class="border-b border-gray-100">
       <div
         class="mx-auto max-w-7xl px-4 py-2 flex items-center justify-between text-xs text-gray-600"
@@ -62,14 +60,12 @@
       </div>
     </div>
 
-    <!-- Navbar -->
     <header
       class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100"
     >
       <nav
         class="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between"
       >
-        <!-- Brand -->
         <a href="index.html" class="flex items-center gap-3">
           <div
             class="h-10 w-10 rounded-xl bg-primary/10 ring-soft flex items-center justify-center"
@@ -87,7 +83,6 @@
           </div>
         </a>
 
-        <!-- Actions -->
         <div class="flex items-center gap-3">
           <button
             id="createProjectBtn"
@@ -108,7 +103,6 @@
       </nav>
     </header>
 
-    <!-- User info -->
     <div class="mx-auto max-w-7xl px-4 pt-4">
       <div
         class="rounded-2xl border border-gray-100 bg-gray-50 p-4 ring-soft flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
@@ -121,10 +115,8 @@
       </div>
     </div>
 
-    <!-- Layout -->
     <main class="mx-auto max-w-7xl px-4 py-8">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <!-- Sidebar -->
         <aside class="lg:col-span-4">
           <div
             class="rounded-2xl border border-gray-100 bg-white p-6 ring-soft"
@@ -163,15 +155,8 @@
                   Enter
                 </div>
               </div>
-
-              <p class="mt-2 text-xs text-gray-500" id="hint">
-                Dica: filtros de Curso/UC ativam quando o backend expuser
-                <span class="font-semibold">courses</span> /
-                <span class="font-semibold">ucs</span>.
-              </p>
             </div>
 
-            <!-- Tipos de curso -->
             <div class="mt-6 border-t border-gray-100 pt-5">
               <h3 class="text-sm font-semibold text-gray-900">
                 Tipos de Curso
@@ -204,31 +189,27 @@
                 </button>
                 <button
                   class="course-btn rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition ring-soft"
-                  data-course="Pos-Graduação"
+                  data-course="Pós-Graduação"
                   type="button"
                 >
                   Pós-Grad.
                 </button>
               </div>
 
-              <!-- Filtros avançados -->
+              <!-- filtros reais (BD) -->
               <div id="filters" class="mt-5 hidden">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 gap-3">
                   <div>
                     <label
-                      for="yearFilter"
+                      for="courseFilter"
                       class="block text-xs font-semibold text-gray-700"
-                      >Ano</label
+                      >Curso</label
                     >
                     <select
-                      id="yearFilter"
+                      id="courseFilter"
                       class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                     >
-                      <option value="">Todos os anos</option>
-                      <option value="1">1º Ano</option>
-                      <option value="2">2º Ano</option>
-                      <option value="3">3º Ano</option>
-                      <option value="4">4º Ano</option>
+                      <option value="">Seleciona um curso</option>
                     </select>
                   </div>
 
@@ -241,8 +222,9 @@
                     <select
                       id="ucFilter"
                       class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      disabled
                     >
-                      <option value="">Todas as UCs</option>
+                      <option value="">Seleciona um curso primeiro</option>
                     </select>
                   </div>
                 </div>
@@ -264,7 +246,6 @@
           </div>
         </aside>
 
-        <!-- Content -->
         <section class="lg:col-span-8">
           <div class="flex items-start justify-between gap-6 flex-wrap">
             <div>
@@ -284,7 +265,6 @@
             </div>
           </div>
 
-          <!-- List -->
           <div class="mt-6">
             <div
               id="projectsList"
@@ -292,7 +272,6 @@
             ></div>
           </div>
 
-          <!-- Footer note -->
           <div class="mt-8 text-xs text-gray-500">
             Sugestão: abre um projeto para ver anexos e detalhes (login pode ser
             necessário).
@@ -301,10 +280,9 @@
       </div>
     </main>
 
-    <!-- Script -->
     <script>
       // ===== CONFIG =====
-      const GRAPHQL_URL = "http://localhost:3000/graphql";
+      const GRAPHQL_URL = `${window.location.origin}/graphql`;
 
       // ===== AUTH =====
       const token = localStorage.getItem("token");
@@ -321,7 +299,6 @@
           ? "Sessão ativa."
           : "Sem sessão (consulta pública).";
 
-      // Logout/Login
       logoutBtn.addEventListener("click", () => {
         if (!token) {
           window.location.href = "login.html";
@@ -332,7 +309,6 @@
         window.location.href = "login.html";
       });
 
-      // Se não tiver token: esconde "criar", transforma botão em "Login"
       if (!token) {
         createBtn.classList.add("hidden");
         logoutBtn.textContent = "Login";
@@ -358,19 +334,18 @@
       const courseBtns = document.querySelectorAll(".course-btn");
       const filtersDiv = document.getElementById("filters");
       const filtersStatus = document.getElementById("filtersStatus");
-      const yearFilter = document.getElementById("yearFilter");
+
+      const courseFilter = document.getElementById("courseFilter");
       const ucFilter = document.getElementById("ucFilter");
       const clearFiltersBtn = document.getElementById("clearFiltersBtn");
 
       // ===== STATE =====
-      let selectedCourseType = "";
+      let selectedCourseType = ""; // CTESP | Licenciatura | Mestrado | Pós-Graduação
       let selectedCourseId = "";
-      let selectedYear = "";
       let selectedUcId = "";
       let searchTerm = "";
       let latestCoursesCache = [];
       let backendHasCourses = false;
-      let backendHasUcs = false;
 
       // ===== HELPERS =====
       async function gql(query, variables = {}) {
@@ -393,7 +368,6 @@
         }
 
         if (!res.ok) {
-          console.error("HTTP error:", res.status, json);
           const msg =
             json?.errors?.[0]?.message ||
             json?.message ||
@@ -404,7 +378,6 @@
         }
 
         if (json?.errors?.length) {
-          console.error("GraphQL errors:", json.errors);
           throw new Error(json.errors[0].message || "Erro GraphQL");
         }
 
@@ -450,16 +423,40 @@
         )}</span>`;
       }
 
+      function normalizeTypeForUI(type) {
+        const t = String(type || "").trim();
+        if (!t) return "";
+        const up = t.toUpperCase();
+
+        if (up === "CTESP" || up === "CTeSP".toUpperCase()) return "CTESP";
+        if (up === "LICENCIATURA") return "Licenciatura";
+        if (up === "MESTRADO") return "Mestrado";
+
+        if (up === "POS-GRADUAÇÃO" || up === "PÓS-GRADUAÇÃO")
+          return "Pós-Graduação";
+        if (up === "POS-GRADUACAO" || up === "PÓS-GRADUACAO")
+          return "Pós-Graduação";
+
+        if (t === "Pós-Graduação") return "Pós-Graduação";
+        return t;
+      }
+
       function renderActiveFilters(total) {
         const parts = [];
         if (searchTerm.trim()) parts.push(`Pesquisa: "${searchTerm.trim()}"`);
         if (selectedCourseType) parts.push(`Tipo: ${selectedCourseType}`);
-        if (selectedYear) parts.push(`Ano: ${selectedYear}`);
+        if (selectedCourseId) {
+          const c = latestCoursesCache.find(
+            (x) => String(x.id) === String(selectedCourseId),
+          );
+          if (c?.name) parts.push(`Curso: ${c.name}`);
+          else parts.push(`Curso: selecionado`);
+        }
         if (selectedUcId) parts.push(`UC: selecionada`);
+
         activeFilters.textContent = parts.length
           ? parts.join(" · ")
           : "Sem filtros ativos";
-
         resultsInfo.textContent =
           typeof total === "number" ? `${total} resultado(s)` : "";
       }
@@ -497,10 +494,13 @@
             "rounded-2xl border border-gray-100 bg-white p-6 ring-soft hover:shadow-sm hover:border-gray-200 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20";
           card.setAttribute("tabindex", "0");
 
-          const created = p.createdAt
-            ? new Date(p.createdAt).toLocaleDateString("pt-PT")
-            : "-";
+          const d = p.createdAt ? new Date(p.createdAt) : null;
+          const created =
+            d && !Number.isNaN(d.getTime())
+              ? d.toLocaleDateString("pt-PT")
+              : "-";
 
+          const creator = p.createdBy?.name || p.createdBy?.email || "-";
           const tags = (p.tags || []).slice(0, 6);
 
           card.innerHTML = `
@@ -522,7 +522,8 @@
             <div class="mt-4 flex flex-wrap gap-2">
               ${badge(`ID: ${p.id}`)}
               ${badge(`Criado: ${created}`)}
-              ${Array.isArray(p.ucIds) && p.ucIds.length ? badge(`UCs: ${p.ucIds.length}`) : ""}
+              ${badge(`Criado por: ${creator}`)}
+              ${p.ucId ? badge(`UC: ${p.ucId}`) : ""}
             </div>
 
             ${
@@ -540,7 +541,9 @@
           `;
 
           const goToProject = () => {
-            window.location.href = `/project.html?id=${encodeURIComponent(p.id)}`;
+            window.location.href = `/project.html?id=${encodeURIComponent(
+              p.id,
+            )}`;
           };
 
           card.addEventListener("click", goToProject);
@@ -555,7 +558,7 @@
         });
       }
 
-      // ===== OPTIONAL: COURSES/UCS =====
+      // ===== COURSES/UCS =====
       async function loadCoursesIfExists() {
         try {
           const data = await gql(`
@@ -563,67 +566,92 @@
               courses { id type name }
             }
           `);
-          latestCoursesCache = data?.courses || [];
+          latestCoursesCache = (data?.courses || []).map((c) => ({
+            id: String(c.id),
+            type: normalizeTypeForUI(c.type),
+            name: c.name,
+          }));
           backendHasCourses = true;
           return true;
         } catch {
           backendHasCourses = false;
+          latestCoursesCache = [];
           return false;
         }
       }
 
-      function pickCourseIdByType(type) {
-        const candidates = latestCoursesCache.filter((c) => c.type === type);
-        return candidates.length ? candidates[0].id : "";
-      }
+      function setCoursesSelectForType(type) {
+        courseFilter.innerHTML = `<option value="">Seleciona um curso</option>`;
+        selectedCourseId = "";
+        courseFilter.value = "";
 
-      async function loadUcsForFiltersIfExists() {
-        ucFilter.innerHTML = `<option value="">Todas as UCs</option>`;
+        ucFilter.innerHTML = `<option value="">Seleciona um curso primeiro</option>`;
         selectedUcId = "";
         ucFilter.value = "";
+        ucFilter.disabled = true;
 
-        if (!selectedCourseId) return;
+        if (!type) return;
 
-        try {
-          const data = await gql(
-            `
-            query($courseId: ID, $year: Int, $search: String) {
-              ucs(courseId: $courseId, year: $year, search: $search) {
-                id
-                name
-                year
-              }
-            }
-            `,
-            {
-              courseId: selectedCourseId,
-              year: selectedYear ? Number(selectedYear) : null,
-              search: null,
-            },
-          );
+        const courses = latestCoursesCache
+          .filter((c) => c.type === type)
+          .sort((a, b) => String(a.name).localeCompare(String(b.name), "pt"));
 
-          backendHasUcs = true;
-          const ucs = data?.ucs || [];
-          for (const u of ucs) {
-            const opt = document.createElement("option");
-            opt.value = u.id;
-            opt.textContent = `${u.name}${u.year ? ` (Ano ${u.year})` : ""}`;
-            ucFilter.appendChild(opt);
-          }
-        } catch {
-          backendHasUcs = false;
+        for (const c of courses) {
+          const opt = document.createElement("option");
+          opt.value = c.id;
+          opt.textContent = c.name;
+          courseFilter.appendChild(opt);
         }
       }
 
+      async function loadUcsForCourse(courseId) {
+        ucFilter.disabled = true;
+        ucFilter.innerHTML = `<option value="">A carregar UCs...</option>`;
+        selectedUcId = "";
+        ucFilter.value = "";
+
+        if (!courseId) {
+          ucFilter.innerHTML = `<option value="">Seleciona um curso primeiro</option>`;
+          ucFilter.disabled = true;
+          return;
+        }
+
+        const data = await gql(
+          `
+          query($courseId: ID!, $search: String) {
+            ucs(courseId: $courseId, search: $search) {
+              id
+              name
+            }
+          }
+          `,
+          {
+            courseId: String(courseId),
+            search: null,
+          },
+        );
+
+        const ucs = data?.ucs || [];
+        ucFilter.innerHTML = `<option value="">Todas as UCs</option>`;
+        for (const u of ucs) {
+          const opt = document.createElement("option");
+          opt.value = String(u.id);
+          opt.textContent = u.name;
+          ucFilter.appendChild(opt);
+        }
+
+        ucFilter.disabled = false;
+      }
+
       function updateFiltersUI() {
-        if (backendHasCourses) {
-          filtersDiv.classList.add("hidden"); // só aparece depois de selecionar tipo
-          filtersStatus.classList.add("hidden");
-        } else {
+        if (!backendHasCourses) {
           filtersDiv.classList.add("hidden");
           filtersStatus.classList.remove("hidden");
           filtersStatus.textContent =
-            "Filtros de Curso/UC indisponíveis (o backend ainda não tem courses/ucs).";
+            "Filtros de Curso/UC indisponíveis (sem courses/ucs no backend).";
+        } else {
+          filtersStatus.classList.add("hidden");
+          filtersDiv.classList.add("hidden"); // só aparece depois de selecionar tipo
         }
       }
 
@@ -640,10 +668,9 @@
         setLoading("A carregar projetos...");
 
         const filters = {
-          search: searchTerm || null,
-          courseId: selectedCourseId || null,
-          year: selectedYear ? Number(selectedYear) : null,
-          ucId: selectedUcId || null,
+          search: searchTerm?.trim() ? searchTerm.trim() : null,
+          courseId: selectedCourseId ? String(selectedCourseId) : null,
+          ucId: selectedUcId ? String(selectedUcId) : null,
           tag: null,
         };
 
@@ -658,7 +685,8 @@
                 description
                 createdAt
                 tags
-                ucIds
+                ucId
+                createdBy { id name email }
               }
             }
           }
@@ -669,13 +697,12 @@
         if (!data?.projects)
           throw new Error("Resposta inválida do backend: falta 'projects'");
 
-        renderProjects(data.projects.items, data.projects.total);
+        renderProjects(data.projects.items || [], data.projects.total);
       }
 
       // ===== EVENTS =====
       let searchDebounce;
 
-      // Suporte a ?q= e ?type= (vindo do index)
       function readQueryParams() {
         const params = new URLSearchParams(window.location.search);
         const q = params.get("q");
@@ -684,9 +711,7 @@
           searchTerm = q;
           searchInput.value = q;
         }
-        if (type) {
-          selectedCourseType = type;
-        }
+        if (type) selectedCourseType = normalizeTypeForUI(type);
       }
 
       searchInput.addEventListener("input", (e) => {
@@ -698,68 +723,69 @@
       });
 
       searchInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
+        if (e.key === "Enter")
           loadProjects().catch((err) => setError(err.message));
-        }
       });
 
       courseBtns.forEach((btn) => {
         btn.addEventListener("click", async () => {
           highlightCourse(btn);
-
           if (!backendHasCourses) return;
 
-          selectedCourseType = btn.dataset.course;
+          selectedCourseType = normalizeTypeForUI(btn.dataset.course);
           filtersDiv.classList.remove("hidden");
 
-          selectedCourseId = pickCourseIdByType(selectedCourseType);
-          await loadUcsForFiltersIfExists();
+          setCoursesSelectForType(selectedCourseType);
+
           await loadProjects();
         });
       });
 
-      yearFilter.addEventListener("change", async () => {
-        selectedYear = yearFilter.value;
-        await loadUcsForFiltersIfExists();
+      courseFilter.addEventListener("change", async () => {
+        selectedCourseId = courseFilter.value || "";
+        selectedUcId = "";
+        await loadUcsForCourse(selectedCourseId);
         await loadProjects();
       });
 
       ucFilter.addEventListener("change", async () => {
-        selectedUcId = ucFilter.value;
+        selectedUcId = ucFilter.value || "";
         await loadProjects();
       });
 
       clearFiltersBtn.addEventListener("click", async () => {
         selectedCourseType = "";
         selectedCourseId = "";
-        selectedYear = "";
         selectedUcId = "";
 
-        yearFilter.value = "";
-        ucFilter.innerHTML = `<option value="">Todas as UCs</option>`;
+        courseFilter.innerHTML = `<option value="">Seleciona um curso</option>`;
+        courseFilter.value = "";
+
+        ucFilter.innerHTML = `<option value="">Seleciona um curso primeiro</option>`;
+        ucFilter.value = "";
+        ucFilter.disabled = true;
+
         courseBtns.forEach((b) => b.classList.remove("ring-2", "ring-primary"));
         filtersDiv.classList.add("hidden");
 
         await loadProjects();
       });
 
-      // ===== INIT =====
       (async function init() {
         try {
           readQueryParams();
           await loadCoursesIfExists();
           updateFiltersUI();
 
-          // Se vier type do URL e o backend suportar, ativa logo
           if (selectedCourseType && backendHasCourses) {
             const btn = [...courseBtns].find(
-              (b) => b.dataset.course === selectedCourseType,
+              (b) =>
+                normalizeTypeForUI(b.dataset.course) === selectedCourseType,
             );
             if (btn) {
               highlightCourse(btn);
               filtersDiv.classList.remove("hidden");
-              selectedCourseId = pickCourseIdByType(selectedCourseType);
-              await loadUcsForFiltersIfExists();
+              setCoursesSelectForType(selectedCourseType);
             }
           }
 

@@ -19,8 +19,10 @@ class FileInitResponse(BaseModel):
 class FilePublic(BaseModel):
     id: UUID
     owner_user_id: str
-    # ✅ alinhado com Postgres: files.project_id é INTEGER
-    project_id: Optional[int] = None
+
+    # ✅ tens UUID reais na BD
+    project_id: Optional[UUID] = None
+
     original_name: str
     content_type: str
     size_bytes: int
@@ -34,8 +36,8 @@ class FileDownloadResponse(BaseModel):
 
 
 class FileAttachRequest(BaseModel):
-    # ✅ era str (causava 422 ao receber number)
-    projectId: int = Field(ge=1)
+    # ✅ projectId é UUID (porque tens UUID reais)
+    projectId: UUID
 
 
 class FileCompleteResponse(BaseModel):

@@ -83,6 +83,84 @@
         padding: 12px;
         overflow: auto;
       }
+
+      /* ✅ Toast / Alert */
+      .toast-wrap {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 9999;
+        pointer-events: none;
+      }
+      .toast {
+        pointer-events: auto;
+        width: min(420px, calc(100vw - 36px));
+        border-radius: 14px;
+        padding: 12px 12px 10px;
+        background: #111;
+        color: #fff;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .toast .top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .toast .title {
+        font-weight: 700;
+        font-size: 14px;
+        margin: 0;
+      }
+      .toast .close {
+        background: transparent;
+        color: #fff;
+        border: 0;
+        font-size: 18px;
+        line-height: 18px;
+        cursor: pointer;
+        padding: 4px 6px;
+        opacity: 0.9;
+      }
+      .toast .msg {
+        margin: 8px 0 0;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.92);
+        white-space: pre-wrap;
+      }
+      .toast .meta2 {
+        margin-top: 8px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .toast .btnrow {
+        margin-top: 10px;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+      .toast .btnsmall {
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 0;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .toast .btnok {
+        background: #f05a31;
+        color: #fff;
+      }
+      .toast .btnghost {
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+      }
     </style>
   </head>
   <body>
@@ -132,9 +210,12 @@
       </div>
     </main>
 
+    <!-- ✅ Toast container -->
+    <div class="toast-wrap" id="toastWrap"></div>
+
     <script>
-      const API_BASE = "http://localhost:3000";
-      const GRAPHQL_URL = `${API_BASE}/graphql`;
+      const API_BASE = ""; // same-origin (nginx)
+      const GRAPHQL_URL = `/graphql`;
 
       function setStatus(msg) {
         document.getElementById("status").textContent = msg || "";
@@ -153,19 +234,8 @@
         return { raw, id };
       }
 
-      const toStr = (v) => {
-        if (v == null) return "";
-        if (typeof v === "string") return v;
-        try {
-          return JSON.stringify(v);
-        } catch {
-          return String(v);
-        }
-      };
-
       async function gql(query, variables = {}) {
-        const token = getToken(); // ✅ FIX: antes token não existia aqui
-
+        const token = getToken();
         const res = await fetch(GRAPHQL_URL, {
           method: "POST",
           headers: {
@@ -231,9 +301,7 @@
           `${API_BASE}/files/${encodeURIComponent(fileId)}/download`,
           {
             method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           },
         );
 
@@ -251,6 +319,187 @@
         return json.downloadUrl;
       }
 
+      // =========================================================
+      // ✅ NOTIFICATIONS (ALERTA)
+      // =========================================================
+
+      const toastWrap = document.getElementById("toastWrap");
+      let notifTimer = null;
+      let lastShownNotificationId = null;
+
+      function safeDate(v) {
+        try {
+          const d = new Date(v);
+          if (Number.isNaN(d.getTime())) return "";
+          return d.toLocaleString("pt-PT");
+        } catch {
+          return "";
+        }
+      }
+
+      function pickMessage(n) {
+        // tenta vários nomes (para ser compatível com diferentes schemas)
+        return (
+          n.message ||
+          n.text ||
+          n.title ||
+          n.body ||
+          n.type ||
+          n.event ||
+          `Tens uma nova notificação (id=${n.id})`
+        );
+      }
+
+      function removeToast(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+      }
+
+      async function markNotificationRead(id) {
+        const token = getToken();
+        if (!token) return;
+
+        try {
+          const res = await fetch(`${API_BASE}/notifications/${id}/read`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+          if (!res.ok) {
+            const t = await res.text().catch(() => "");
+            console.warn("mark read failed:", res.status, t);
+          }
+        } catch (e) {
+          console.warn("mark read error:", e);
+        }
+      }
+
+      function showToastForNotification(n) {
+        if (!n || !n.id) return;
+
+        // ✅ evita repetir o mesmo alerta
+        if (String(n.id) === String(lastShownNotificationId)) return;
+        lastShownNotificationId = String(n.id);
+
+        const toastId = `toast_${n.id}`;
+        const createdAt =
+          n.createdAt || n.created_at || n.at || n.timestamp || null;
+
+        const msg = pickMessage(n);
+
+        const el = document.createElement("div");
+        el.className = "toast";
+        el.id = toastId;
+
+        el.innerHTML = `
+          <div class="top">
+            <div>
+              <p class="title">Nova notificação ✅</p>
+              <div class="msg">${escapeHtml(msg)}</div>
+              <div class="meta2">
+                <span>${createdAt ? safeDate(createdAt) : ""}</span>
+                <span>#${escapeHtml(String(n.id))}</span>
+              </div>
+              <div class="btnrow">
+                <button class="btnsmall btnghost" data-action="dismiss">Ignorar</button>
+                <button class="btnsmall btnok" data-action="ok">OK</button>
+              </div>
+            </div>
+            <button class="close" aria-label="Fechar" data-action="close">×</button>
+          </div>
+        `;
+
+        el.addEventListener("click", async (ev) => {
+          const btn = ev.target?.closest?.("[data-action]");
+          if (!btn) return;
+          const action = btn.getAttribute("data-action");
+
+          // em qualquer caso, removemos o toast
+          removeToast(toastId);
+
+          // ✅ marca como lida ao fechar/ok/ignorar
+          await markNotificationRead(n.id);
+        });
+
+        toastWrap.appendChild(el);
+
+        // auto-remove após 7s + marca lida também
+        setTimeout(async () => {
+          const stillThere = document.getElementById(toastId);
+          if (stillThere) {
+            stillThere.remove();
+            await markNotificationRead(n.id);
+          }
+        }, 7000);
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      async function fetchUnreadNotifications(limit = 1) {
+        const token = getToken();
+        if (!token) return [];
+
+        const url = `${API_BASE}/notifications?unread=true&limit=${encodeURIComponent(
+          limit,
+        )}&offset=0`;
+
+        const res = await fetch(url, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+          const t = await res.text().catch(() => "");
+          console.warn("notifications fetch failed:", res.status, t);
+          return [];
+        }
+
+        const json = await res.json().catch(() => null);
+
+        // ✅ suporta backend a devolver array direto OU objeto com items
+        if (Array.isArray(json)) return json;
+
+        const items =
+          json?.items ||
+          json?.data ||
+          json?.notifications ||
+          json?.rows ||
+          json?.result;
+
+        return Array.isArray(items) ? items : [];
+      }
+
+      async function checkNotificationsOnce() {
+        try {
+          const items = await fetchUnreadNotifications(1);
+          if (items.length > 0) {
+            showToastForNotification(items[0]);
+          }
+        } catch (e) {
+          console.warn("checkNotificationsOnce error:", e);
+        }
+      }
+
+      function startNotificationsPolling() {
+        // dispara logo
+        checkNotificationsOnce();
+
+        // polling
+        if (notifTimer) clearInterval(notifTimer);
+        notifTimer = setInterval(checkNotificationsOnce, 3000);
+      }
+
+      // =========================================================
+
       document.addEventListener("DOMContentLoaded", async () => {
         const { raw, id } = getProjectIdInt();
         if (!id) {
@@ -260,6 +509,9 @@
 
         const downloadBtn = document.getElementById("downloadBtn");
         downloadBtn.disabled = true;
+
+        // ✅ começa polling de notificações (só mostra se houver token e unread)
+        startNotificationsPolling();
 
         try {
           const p = await fetchProject(id);

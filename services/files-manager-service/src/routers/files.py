@@ -1,15 +1,24 @@
+# services/files-manager-service/src/routers/files.py
+
 import uuid
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException
+
 from ..auth import get_current_user_id
 from ..config import settings
 from ..schemas import (
-    FileInitRequest, FileInitResponse,
-    FileDownloadResponse, FileAttachRequest,
-    FileCompleteResponse, FilePublic
+    FileInitRequest,
+    FileInitResponse,
+    FileDownloadResponse,
+    FileAttachRequest,
+    FileCompleteResponse,
+    FilePublic,
 )
 from .. import models
 from ..s3 import presigned_put_url, presigned_get_url, delete_object
-from ..db import get_conn  # ✅ faltava
+from ..db import get_conn
+from ..mq import publish_file_uploaded  # ✅
 
 router = APIRouter(prefix="/files", tags=["files"])
 
@@ -53,16 +62,15 @@ def init_upload(
     upload_url = presigned_put_url(object_key=object_key, content_type=body.contentType)
 
     return FileInitResponse(
-    fileId=str(row["id"]),
-    objectKey=object_key,
-    uploadUrl=upload_url,
-    expiresInSeconds=settings.PRESIGNED_EXPIRES_SECONDS,
-)
-
+        fileId=str(row["id"]),
+        objectKey=object_key,
+        uploadUrl=upload_url,
+        expiresInSeconds=settings.PRESIGNED_EXPIRES_SECONDS,
+    )
 
 
 @router.post("/{file_id}/complete", response_model=FileCompleteResponse)
-def complete_upload(
+async def complete_upload(
     file_id: str,
     user_id: str = Depends(get_current_user_id),
 ):
@@ -77,11 +85,28 @@ def complete_upload(
     if not updated:
         raise HTTPException(status_code=404, detail="File not found")
 
+    # ✅ (Opcional) Evento técnico: ficheiro ficou READY (ainda sem projeto)
+    try:
+        await publish_file_uploaded(
+            {
+                "type": "FILE_READY",
+                "event": "file.ready",
+                "userId": str(user_id),
+                "fileId": str(updated["id"]),
+                "projectId": None,  # ainda não sabemos o projeto nesta fase
+                "objectKey": updated["object_key"],
+                "originalName": updated["original_name"],
+                "at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+    except Exception:
+        pass
+
     return FileCompleteResponse(file=_to_public(updated))
 
 
 @router.post("/{file_id}/attach", response_model=FileCompleteResponse)
-def attach_to_project(
+async def attach_to_project(
     file_id: str,
     body: FileAttachRequest,
     user_id: str = Depends(get_current_user_id),
@@ -93,11 +118,26 @@ def attach_to_project(
     if str(row["owner_user_id"]) != str(user_id):
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    # ✅ 1 ficheiro por projeto: o models.attach_file_to_project faz detach do anterior e attach deste
-    updated = models.attach_file_to_project(file_id=file_id, project_id=body.projectId)
-
+    updated = models.attach_file_to_project(file_id=file_id, project_id=str(body.projectId))
     if not updated:
         raise HTTPException(status_code=404, detail="File not found")
+
+    # ✅ EVENTO A: ficheiro pronto e ligado ao projeto
+    try:
+        await publish_file_uploaded(
+            {
+                "type": "PROJECT_FILE_READY",
+                "event": "project.file.ready",
+                "userId": str(user_id),
+                "fileId": str(updated["id"]),
+                "projectId": str(body.projectId),  # ✅ UUID em string
+                "objectKey": updated["object_key"],
+                "originalName": updated["original_name"],
+                "at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+    except Exception:
+        pass
 
     return FileCompleteResponse(file=_to_public(updated))
 
@@ -105,7 +145,7 @@ def attach_to_project(
 @router.get("/{file_id}/download", response_model=FileDownloadResponse)
 def download(
     file_id: str,
-    user_id: str = Depends(get_current_user_id),  # ✅ qualquer autenticado
+    user_id: str = Depends(get_current_user_id),
 ):
     row = models.get_file(file_id)
     if not row or row["status"] != "READY":
@@ -122,7 +162,7 @@ def download(
 @router.get("/by-project/{project_id}")
 def get_by_project(
     project_id: str,
-    user_id: str = Depends(get_current_user_id),  # ✅ qualquer autenticado
+    user_id: str = Depends(get_current_user_id),
 ):
     with get_conn() as conn:
         with conn.cursor() as cur:
@@ -150,4 +190,3 @@ def delete(
     delete_object(row["object_key"])
     models.mark_file_deleted(file_id)
     return {"status": "deleted"}
-

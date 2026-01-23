@@ -1,9 +1,12 @@
 FROM nginx:alpine
 
+# Limpa tudo
 RUN rm -rf /usr/share/nginx/html/*
-COPY . /usr/share/nginx/html
 
-# Faz o nginx usar a tua config
+# Copia só a pasta public para o sítio certo
+COPY public/ /usr/share/nginx/html/public/
+
+# Config do nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80

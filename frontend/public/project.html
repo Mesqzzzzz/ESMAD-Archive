@@ -214,8 +214,9 @@
     <div class="toast-wrap" id="toastWrap"></div>
 
     <script>
-      const API_BASE = ""; // same-origin (nginx)
-      const GRAPHQL_URL = `/graphql`;
+      const API_BASE = window.location.origin; // força porta correta (ex: http://localhost:8080)
+      const GRAPHQL_URL = `${API_BASE}/graphql`;
+      console.log("[DEBUG] API_BASE =", API_BASE);
 
       function setStatus(msg) {
         document.getElementById("status").textContent = msg || "";
@@ -360,7 +361,7 @@
         if (!token) return;
 
         try {
-          const res = await fetch(`${API_BASE}/notifications/${id}/read`, {
+          const res = await fetch(`/notifications/${id}/read`, {
             method: "POST",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -448,9 +449,8 @@
         const token = getToken();
         if (!token) return [];
 
-        const url = `${API_BASE}/notifications?unread=true&limit=${encodeURIComponent(
-          limit,
-        )}&offset=0`;
+        // ✅ URL RELATIVO: vai sempre ao mesmo origin (http://localhost:8080)
+        const url = `/notifications/?unread=true&limit=${encodeURIComponent(limit)}&offset=0`;
 
         const res = await fetch(url, {
           method: "GET",
@@ -465,7 +465,7 @@
 
         const json = await res.json().catch(() => null);
 
-        // ✅ suporta backend a devolver array direto OU objeto com items
+        // suporta backend a devolver array direto OU objeto com items
         if (Array.isArray(json)) return json;
 
         const items =
